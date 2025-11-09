@@ -9,7 +9,7 @@ def main():
     scene.add_entity(gs.morphs.Plane())
 
     project_root = Path(__file__).resolve().parents[2]
-    mjcf_path = project_root / "genesis-rl" / "src" / "xml" / "mobile_base" / "diff_drive.xml"
+    mjcf_path = project_root / "genesis-rl" / "xml" / "mobile_base" / "scene_1.xml"
 
     robot = scene.add_entity(
         gs.morphs.MJCF(
