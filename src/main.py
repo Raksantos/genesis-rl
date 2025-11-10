@@ -111,38 +111,82 @@ def run_episode(env, show_viewer=False, dwa_params=None, seed=None):
     return result
 
 
+# def main():
+#     N = 20
+#     results = []
+
+#     gs.init(backend=gs.gpu)
+
+#     xml_path = (
+#         Path(__file__).resolve().parents[2]
+#         / "genesis-rl"
+#         / "xml"
+#         / "mobile_base"
+#         / "diff_drive.xml"
+#     )
+#     env = GenesisDiffDriveGoalEnv(str(xml_path), show_viewer=False)
+
+#     for i in range(N):
+#         res = run_episode(env, show_viewer=False)
+#         results.append(res)
+
+#     success = sum(r["success_rate"] for r in results) / N
+#     avg_time = sum(r["time_to_goal"] for r in results) / N
+#     avg_coll = sum(r["number_of_collisions"] for r in results) / N
+
+#     summary = {
+#         "success_medio": success,
+#         "tempo_medio": avg_time,
+#         "colisoes_medias": avg_coll,
+#     }
+#     logger.info(f"[resumo] {summary}")
+
+#     print("==== resumo currículo ====")
+#     print(summary)
+
 def main():
-    N = 20
-    results = []
+    gs.init(backend=gs.gpu)  # ou gs.cpu
 
-    gs.init(backend=gs.gpu)
-
-    xml_path = (
-        Path(__file__).resolve().parents[2]
-        / "genesis-rl"
-        / "xml"
-        / "mobile_base"
-        / "diff_drive.xml"
+    scene = gs.Scene(
+        show_viewer=True,
+        viewer_options=gs.options.ViewerOptions(
+            camera_pos=(5.0, 0.0, 3.0),
+            camera_lookat=(0.0, 0.0, 0.5),
+        ),
     )
-    env = GenesisDiffDriveGoalEnv(str(xml_path), show_viewer=False)
 
-    for i in range(N):
-        res = run_episode(env, show_viewer=False)
-        results.append(res)
+    scene.add_entity(gs.morphs.Plane())
 
-    success = sum(r["success_rate"] for r in results) / N
-    avg_time = sum(r["time_to_goal"] for r in results) / N
-    avg_coll = sum(r["number_of_collisions"] for r in results) / N
+    half = 5.0
+    t = 0.15
+    h = 1.5
+    scene.add_entity(gs.morphs.Box(lower=(-half, half - t, 0), upper=(half, half, h), fixed=True))
+    scene.add_entity(gs.morphs.Box(lower=(-half, -half, 0), upper=(half, -half + t, h), fixed=True))
+    scene.add_entity(gs.morphs.Box(lower=(half - t, -half, 0), upper=(half, half, h), fixed=True))
+    scene.add_entity(gs.morphs.Box(lower=(-half, -half, 0), upper=(-half + t, half, h), fixed=True))
 
-    summary = {
-        "success_medio": success,
-        "tempo_medio": avg_time,
-        "colisoes_medias": avg_coll,
-    }
-    logger.info(f"[resumo] {summary}")
+    project_root = Path(__file__).resolve().parents[2]
+    go2_xml = project_root / "genesis-rl" / "xml" / "go2" / "go2.xml"
 
-    print("==== resumo currículo ====")
-    print(summary)
+    robot = scene.add_entity(
+        gs.morphs.MJCF(
+            file=str(go2_xml),
+            pos=(0.0, 0.0, 0.0),
+        )
+    )
+
+    scene.add_entity(
+        gs.morphs.Box(
+            pos=(3.0, 3.0, 0.05),
+            size=(0.15, 0.15, 0.08),
+            fixed=True,
+        )
+    )
+
+    scene.build()
+
+    for _ in range(2000):
+        scene.step()
 
 
 if __name__ == "__main__":
