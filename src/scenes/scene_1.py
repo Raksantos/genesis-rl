@@ -25,48 +25,44 @@ def main():
         ),
     )
 
-    # chão
     scene.add_entity(gs.morphs.Plane())
 
-    # ===== arena =====
     half_x = 5.0
     half_y = 5.0
     wall_thickness = 0.15
     wall_height = 1.5
 
-    # topo (y = +5)
     add_wall_bounds(
         scene,
         lower=(-half_x, half_y - wall_thickness, 0.0),
         upper=(half_x, half_y, wall_height),
     )
-    # base (y = -5)
+
     add_wall_bounds(
         scene,
         lower=(-half_x, -half_y, 0.0),
         upper=(half_x, -half_y + wall_thickness, wall_height),
     )
-    # direita (x = +5)
+
     add_wall_bounds(
         scene,
         lower=(half_x - wall_thickness, -half_y, 0.0),
         upper=(half_x, half_y, wall_height),
     )
-    # esquerda (x = -5)
+
     add_wall_bounds(
         scene,
         lower=(-half_x, -half_y, 0.0),
         upper=(-half_x + wall_thickness, half_y, wall_height),
     )
 
-    # obstáculo interno
+    
     add_wall_bounds(
         scene,
         lower=(-1.0, -0.1, 0.0),
         upper=(1.0, 0.1, 1.0),
     )
 
-    # ===== robô =====
     project_root = Path(__file__).resolve().parents[2]
     mjcf_path = project_root / "xml" / "mobile_base" / "diff_drive.xml"
 
@@ -77,7 +73,6 @@ def main():
         )
     )
 
-    # ===== goal =====
     scene.add_entity(
         gs.morphs.Box(
             pos=(4.0, 4.0, 0.05),
@@ -88,7 +83,6 @@ def main():
 
     scene.build()
 
-    # atuadores
     try:
         left_id = robot.get_actuator_id("left_wheel_act")
         right_id = robot.get_actuator_id("right_wheel_act")

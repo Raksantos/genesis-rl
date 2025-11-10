@@ -42,7 +42,6 @@ def run_dwa():
         wl = v - (w * wheel_sep / 2.0)
         wr = v + (w * wheel_sep / 2.0)
 
-        # NÃO dividir aqui:
         action = np.array([wl, wr], dtype=np.float32)
         obs, _, terminated, truncated, info = env.step(action)
 
