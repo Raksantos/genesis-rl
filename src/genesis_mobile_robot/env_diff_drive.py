@@ -59,8 +59,6 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         )
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
 
-        gs.init(backend=gs.cpu)
-
         self.scene = gs.Scene(show_viewer=show_viewer)
         self.scene.add_entity(gs.morphs.Plane())
 

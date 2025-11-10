@@ -56,7 +56,6 @@ def main():
         upper=(-half_x + wall_thickness, half_y, wall_height),
     )
 
-    
     add_wall_bounds(
         scene,
         lower=(-1.0, -0.1, 0.0),
