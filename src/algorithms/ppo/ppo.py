@@ -7,6 +7,7 @@ from src.genesis_mobile_robot.env_diff_drive import GenesisDiffDriveGoalEnv
 
 def make_env(show_viewer=False):
     project_root = Path(__file__).resolve().parents[2]
+
     xml_path = project_root / "xml" / "mobile_base" / "diff_drive.xml"
 
     env = GenesisDiffDriveGoalEnv(

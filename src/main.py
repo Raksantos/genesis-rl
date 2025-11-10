@@ -1,42 +1,62 @@
 from pathlib import Path
-import genesis as gs
+from src.genesis_mobile_robot.env_diff_drive import GenesisDiffDriveGoalEnv
+from src.algorithms.dwa import DWAConfig, DWAPlanner
+import numpy as np
+import math
 
+def run_dwa():
+    root = Path(__file__).resolve().parents[2]
+    xml_path = root / "genesis-rl" / "xml" / "mobile_base" / "diff_drive.xml"
+    env = GenesisDiffDriveGoalEnv(str(xml_path), show_viewer=True)
 
-def main():
-    gs.init(backend=gs.cpu)
+    cfg = DWAConfig()
+    planner = DWAPlanner(cfg)
 
-    scene = gs.Scene(show_viewer=True)
-    scene.add_entity(gs.morphs.Plane())
+    obs, _ = env.reset()
 
-    project_root = Path(__file__).resolve().parents[2]
-    mjcf_path = project_root / "genesis-rl" / "xml" / "mobile_base" / "scene_1.xml"
+    obstacles = [
+        (-5.0, y) for y in np.linspace(-5.0, 5.0, 10)
+    ] + [
+        (5.0, y) for y in np.linspace(-5.0, 5.0, 10)
+    ] + [
+        (x, -5.0) for x in np.linspace(-5.0, 5.0, 10)
+    ] + [
+        (x, 5.0) for x in np.linspace(-5.0, 5.0, 10)
+    ]
 
-    robot = scene.add_entity(
-        gs.morphs.MJCF(
-            file=str(mjcf_path),
-            pos=(0, 0, 0),
-        )
-    )
+    done = False
+    last_info = {}
 
-    scene.build()
+    x = float(obs[0])
+    y = float(obs[1])
+    yaw = math.atan2(float(obs[3]), float(obs[2]))
+    x_dwa = np.array([x, y, yaw, 0.0, 0.0], dtype=float)
 
-    try:
-        left_id = robot.get_actuator_id("left_wheel_act")
-        right_id = robot.get_actuator_id("right_wheel_act")
-    except Exception:
-        left_id = right_id = None
+    while not done:
+        gx = env.goal_pos[0]
+        gy = env.goal_pos[1]
 
-    for _ in range(2000):
-        if left_id is not None and right_id is not None:
-            import numpy as np
+        (v, w), _ = planner.plan(x_dwa, (gx, gy), obstacles)
 
-            ctrl = np.zeros(robot.num_actuators, dtype=np.float32)
-            ctrl[left_id] = 5.0
-            ctrl[right_id] = 5.0
-            robot.set_control(ctrl)
+        wheel_sep = 0.36
+        wl = v - (w * wheel_sep / 2.0)
+        wr = v + (w * wheel_sep / 2.0)
 
-        scene.step()
+        # NÃO dividir aqui:
+        action = np.array([wl, wr], dtype=np.float32)
+        obs, _, terminated, truncated, info = env.step(action)
 
+        last_info = info
+
+        x = float(obs[0])
+        y = float(obs[1])
+        yaw = math.atan2(float(obs[3]), float(obs[2]))
+
+        x_dwa = np.array([x, y, yaw, v, w], dtype=float)
+
+        done = terminated or truncated
+
+    print("episódio terminou; dist final:", last_info.get("dist"))
 
 if __name__ == "__main__":
-    main()
+    run_dwa()

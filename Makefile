@@ -1,2 +1,5 @@
-train_ppo:
-	poetry run python src/genesis_mobile_robot/train_ppo.py
+execute:
+	poetry run python src/main.py
+
+format:
+	ruff format .

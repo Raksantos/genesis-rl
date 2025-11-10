@@ -8,7 +8,6 @@ import numpy as np
 
 
 def yaw_to_quat(yaw: float) -> np.ndarray:
-    # gira só em z
     half = yaw * 0.5
     return np.array([math.cos(half), 0.0, 0.0, math.sin(half)], dtype=np.float32)
 
@@ -29,7 +28,7 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         arena_half: float = 5.0,
         max_steps: int = 300,
         frame_skip: int = 1,
-        wheel_separation: float = 0.36,  # distância entre rodas
+        wheel_separation: float = 0.36,
         max_wheel_vel: float = 6.0,
         show_viewer: bool = False,
     ):
@@ -40,19 +39,18 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         self.frame_skip = frame_skip
         self.wheel_separation = wheel_separation
         self.max_wheel_vel = max_wheel_vel
-        self.dt = 0.01  # mesmo dt da cena
+        self.dt = 0.01
 
-        # ação: vel roda esquerda, vel roda direita, normalizadas
         self.action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
 
         high = np.array(
             [
-                arena_half,  # x
-                arena_half,  # y
+                arena_half,
+                arena_half,
                 1.0,
                 1.0,
-                arena_half,  # goal_x
-                arena_half,  # goal_y
+                arena_half,
+                arena_half,
                 2 * arena_half,
                 2 * arena_half,
                 2 * math.sqrt(2) * arena_half,
@@ -61,13 +59,11 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         )
         self.observation_space = gym.spaces.Box(-high, high, dtype=np.float32)
 
-        # init genesis
         gs.init(backend=gs.cpu)
 
         self.scene = gs.Scene(show_viewer=show_viewer)
         self.scene.add_entity(gs.morphs.Plane())
 
-        # paredes
         h = arena_half
         t = 0.15
         wh = 1.5
@@ -75,17 +71,13 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         def add_wall(lower, upper):
             self.scene.add_entity(gs.morphs.Box(lower=lower, upper=upper, fixed=True))
 
-        add_wall(lower=(-h, h - t, 0.0), upper=(h, h, wh))       # topo
-        add_wall(lower=(-h, -h, 0.0), upper=(h, -h + t, wh))     # base
-        add_wall(lower=(h - t, -h, 0.0), upper=(h, h, wh))       # direita
-        add_wall(lower=(-h, -h, 0.0), upper=(-h + t, h, wh))     # esquerda
+        add_wall(lower=(-h, h - t, 0.0), upper=(h, h, wh))
+        add_wall(lower=(-h, -h, 0.0), upper=(h, -h + t, wh))
+        add_wall(lower=(h - t, -h, 0.0), upper=(h, h, wh))
+        add_wall(lower=(-h, -h, 0.0), upper=(-h + t, h, wh))
 
-        # robo: vamos usar teu MJCF só pra desenhar
-        self.robot = self.scene.add_entity(
-            gs.morphs.MJCF(file=xml_path, pos=(-4.0, -4.0, 0.0))
-        )
+        self.robot = self.scene.add_entity(gs.morphs.MJCF(file=xml_path, pos=(-4.0, -4.0, 0.0)))
 
-        # goal
         self.goal_pos = np.array([4.0, 4.0, 0.05], dtype=np.float32)
         self.scene.add_entity(
             gs.morphs.Box(pos=tuple(self.goal_pos), size=(0.15, 0.15, 0.08), fixed=True)
@@ -93,7 +85,6 @@ class GenesisDiffDriveGoalEnv(gym.Env):
 
         self.scene.build()
 
-        # estado interno do robô (cinemático)
         self.x = -4.0
         self.y = -4.0
         self.yaw = 0.0
@@ -101,9 +92,7 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         self.step_count = 0
         self.prev_dist = None
 
-    # -----------------------------------------------------
     def _sync_visual_robot(self):
-        # escreve no robô a pose cinemática
         quat = yaw_to_quat(self.yaw)
         self.robot.set_pos(np.array([self.x, self.y, 0.0], dtype=np.float32))
         self.robot.set_quat(quat)
@@ -129,7 +118,6 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         )
         return obs, dist
 
-    # -----------------------------------------------------
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
 
@@ -145,31 +133,25 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         self.prev_dist = dist
         return obs, {}
 
-    # -----------------------------------------------------
     def step(self, action):
         action = np.clip(action, -1.0, 1.0)
         wl = float(action[0]) * self.max_wheel_vel
         wr = float(action[1]) * self.max_wheel_vel
 
-        # diferencial -> v, omega
-        v = (wr + wl) * 0.5 * 0.1  # 0.1 é um ganho pra não sair voando
+        v = (wr + wl) * 0.5 * 0.1
         omega = (wr - wl) / self.wheel_separation
 
-        # integra
         for _ in range(self.frame_skip):
             self.x += v * math.cos(self.yaw) * self.dt
             self.y += v * math.sin(self.yaw) * self.dt
             self.yaw += omega * self.dt
 
-        # sincroniza com o robô visual
         self._sync_visual_robot()
 
-        # avança simulação só pra atualizar viewer
         self.scene.step()
 
         obs, dist = self._get_obs()
 
-        # reward
         reward = 0.0
         if self.prev_dist is not None:
             reward += (self.prev_dist - dist) * 5.0
@@ -185,7 +167,7 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         info = {
             "dist": dist,
             "reached_goal": reached_goal,
-            "collided": False,          # dá pra ligar depois
+            "collided": False,
             "pos": np.array([self.x, self.y], dtype=np.float32),
             "dt": self.dt * self.frame_skip,
             "action": np.array([wl, wr], dtype=np.float32),
@@ -194,7 +176,6 @@ class GenesisDiffDriveGoalEnv(gym.Env):
         return obs, reward, terminated, truncated, info
 
     def render(self):
-        # viewer já está ligado se show_viewer=True
         pass
 
     def close(self):
