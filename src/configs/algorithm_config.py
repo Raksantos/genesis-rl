@@ -55,7 +55,7 @@ class TrainCfg:
     runner_class_name: str = "OnPolicyRunner"
     num_steps_per_env: int = 24
     save_interval: int = 100
-    obs_groups: Any = None
+    obs_groups: dict | None = None
     seed: int = 42
 
 

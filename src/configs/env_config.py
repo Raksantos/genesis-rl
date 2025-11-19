@@ -18,7 +18,7 @@ class EnvCfg:
         "RL_calf_joint": -1.5,
         "RR_calf_joint": -1.5,
     })
-    dof_names: list[str] = field(default_factory=lambda: [
+    joint_names: list[str] = field(default_factory=lambda: [
         "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
         "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
         "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
@@ -62,10 +62,6 @@ class RewardCfg:
         "base_height": -50.0,
         "action_rate": -0.005,
         "similar_to_default": -0.1,
-        "jump_height_tracking": 0.5,
-        "jump_height_achievement": 10.0,
-        "jump_speed": 1.0,
-        "jump_landing": 0.08,
     })
 
 

@@ -1,7 +1,6 @@
 import pickle
 
 import cv2
-import numpy as np
 
 
 def normalize_commands(commands_buffer):
