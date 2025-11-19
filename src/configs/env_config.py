@@ -1,0 +1,87 @@
+from dataclasses import asdict, dataclass, field
+
+
+@dataclass
+class EnvCfg:
+    num_actions: int = 12
+    default_joint_angles: dict[str, float] = field(default_factory=lambda: {
+        "FL_hip_joint": 0.0,
+        "FR_hip_joint": 0.0,
+        "RL_hip_joint": 0.0,
+        "RR_hip_joint": 0.0,
+        "FL_thigh_joint": 0.8,
+        "FR_thigh_joint": 0.8,
+        "RL_thigh_joint": 1.0,
+        "RR_thigh_joint": 1.0,
+        "FL_calf_joint": -1.5,
+        "FR_calf_joint": -1.5,
+        "RL_calf_joint": -1.5,
+        "RR_calf_joint": -1.5,
+    })
+    dof_names: list[str] = field(default_factory=lambda: [
+        "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+        "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+        "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+        "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
+    ])
+    kp: float = 20.0
+    kd: float = 0.5
+    termination_if_roll_greater_than: float = 10.0
+    termination_if_pitch_greater_than: float = 10.0
+    base_init_pos: list[float] = field(default_factory=lambda: [0.0, 0.0, 0.42])
+    base_init_quat: list[float] = field(default_factory=lambda: [1.0, 0.0, 0.0, 0.0])
+    episode_length_s: float = 20.0
+    resampling_time_s: float = 4.0
+    action_scale: float = 0.25
+    simulate_action_latency: bool = True
+    clip_actions: float = 100.0
+
+
+@dataclass
+class ObsCfg:
+    num_obs: int = 48
+    obs_scales: dict[str, float] = field(default_factory=lambda: {
+        "lin_vel": 2.0,
+        "ang_vel": 0.25,
+        "dof_pos": 1.0,
+        "dof_vel": 0.05,
+    })
+
+
+@dataclass
+class RewardCfg:
+    tracking_sigma: float = 0.25
+    base_height_target: float = 0.3
+    feet_height_target: float = 0.075
+    jump_upward_velocity: float = 1.2
+    jump_reward_steps: int = 50
+    reward_scales: dict[str, float] = field(default_factory=lambda: {
+        "tracking_lin_vel": 1.0,
+        "tracking_ang_vel": 0.2,
+        "lin_vel_z": -1.0,
+        "base_height": -50.0,
+        "action_rate": -0.005,
+        "similar_to_default": -0.1,
+        "jump_height_tracking": 0.5,
+        "jump_height_achievement": 10.0,
+        "jump_speed": 1.0,
+        "jump_landing": 0.08,
+    })
+
+
+@dataclass
+class CommandCfg:
+    num_commands: int = 5  # [lin_vel_x, lin_vel_y, ang_vel, height, jump]
+    lin_vel_x_range: list[float] = field(default_factory=lambda: [-1.0, 2.0])
+    lin_vel_y_range: list[float] = field(default_factory=lambda: [-0.5, 0.5])
+    ang_vel_range: list[float] = field(default_factory=lambda: [-0.6, 0.6])
+    height_range: list[float] = field(default_factory=lambda: [0.2, 0.4])
+    jump_range: list[float] = field(default_factory=lambda: [0.5, 1.5])
+
+
+def get_cfgs():
+    env_cfg = asdict(EnvCfg())
+    obs_cfg = asdict(ObsCfg())
+    reward_cfg = asdict(RewardCfg())
+    command_cfg = asdict(CommandCfg())
+    return env_cfg, obs_cfg, reward_cfg, command_cfg

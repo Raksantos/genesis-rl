@@ -71,7 +71,6 @@ class Go2Env:
             ),
         )
         
-        # self.cam_0 : gs.Camera = None
         if add_camera:
             self.cam_0 = self.scene.add_camera(
                 res=(1920, 1080),
@@ -127,7 +126,7 @@ class Go2Env:
         self.jump_toggled_buf = torch.zeros((self.num_envs,), device=self.device)
         self.jump_target_height = torch.zeros((self.num_envs,), device=self.device)
         
-        self.extras = dict()  # extra information for logging
+        self.extras = {}  # extra information for logging
 
     def _resample_commands(self, envs_idx):
         # self.commands[envs_idx, 0] = gs_rand_float(*self.command_cfg["lin_vel_x_range"], (len(envs_idx),), self.device)
