@@ -51,7 +51,7 @@ class EnvCfg:
 
 @dataclass
 class ObsCfg:
-    num_obs: int = 48
+    num_obs: int = 45
     obs_scales: dict[str, float] = field(
         default_factory=lambda: {
             "lin_vel": 2.0,
@@ -67,8 +67,6 @@ class RewardCfg:
     tracking_sigma: float = 0.25
     base_height_target: float = 0.3
     feet_height_target: float = 0.075
-    jump_upward_velocity: float = 1.2
-    jump_reward_steps: int = 50
     reward_scales: dict[str, float] = field(
         default_factory=lambda: {
             "tracking_lin_vel": 1.0,
@@ -83,12 +81,10 @@ class RewardCfg:
 
 @dataclass
 class CommandCfg:
-    num_commands: int = 5  # [lin_vel_x, lin_vel_y, ang_vel, height, jump]
-    lin_vel_x_range: list[float] = field(default_factory=lambda: [-1.0, 2.0])
-    lin_vel_y_range: list[float] = field(default_factory=lambda: [-0.5, 0.5])
-    ang_vel_range: list[float] = field(default_factory=lambda: [-0.6, 0.6])
-    height_range: list[float] = field(default_factory=lambda: [0.2, 0.4])
-    jump_range: list[float] = field(default_factory=lambda: [0.5, 1.5])
+    num_commands: int = 3
+    lin_vel_x_range: list[float] = field(default_factory=lambda: [0.5, 0.5])
+    lin_vel_y_range: list[float] = field(default_factory=lambda: [0.0, 0.0])
+    ang_vel_range: list[float] = field(default_factory=lambda: [0.0, 0.0])
 
 
 def get_cfgs():

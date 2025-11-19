@@ -8,6 +8,7 @@ from rsl_rl.runners import OnPolicyRunner
 import genesis as gs
 
 from src.go2 import Go2Env
+from src.configs import get_cfgs, get_train_cfg
 
 
 def get_train_cfg(exp_name, max_iterations):
