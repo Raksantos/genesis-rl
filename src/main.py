@@ -144,6 +144,7 @@ def run_episode(env, show_viewer=False, dwa_params=None, seed=None):
 #     print("==== resumo currículo ====")
 #     print(summary)
 
+
 def main():
     gs.init(backend=gs.gpu)  # ou gs.cpu
 
@@ -160,10 +161,18 @@ def main():
     half = 5.0
     t = 0.15
     h = 1.5
-    scene.add_entity(gs.morphs.Box(lower=(-half, half - t, 0), upper=(half, half, h), fixed=True))
-    scene.add_entity(gs.morphs.Box(lower=(-half, -half, 0), upper=(half, -half + t, h), fixed=True))
-    scene.add_entity(gs.morphs.Box(lower=(half - t, -half, 0), upper=(half, half, h), fixed=True))
-    scene.add_entity(gs.morphs.Box(lower=(-half, -half, 0), upper=(-half + t, half, h), fixed=True))
+    scene.add_entity(
+        gs.morphs.Box(lower=(-half, half - t, 0), upper=(half, half, h), fixed=True)
+    )
+    scene.add_entity(
+        gs.morphs.Box(lower=(-half, -half, 0), upper=(half, -half + t, h), fixed=True)
+    )
+    scene.add_entity(
+        gs.morphs.Box(lower=(half - t, -half, 0), upper=(half, half, h), fixed=True)
+    )
+    scene.add_entity(
+        gs.morphs.Box(lower=(-half, -half, 0), upper=(-half + t, half, h), fixed=True)
+    )
 
     project_root = Path(__file__).resolve().parents[2]
     go2_xml = project_root / "genesis-rl" / "xml" / "go2" / "go2.xml"

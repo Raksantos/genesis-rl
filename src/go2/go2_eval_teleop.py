@@ -16,51 +16,54 @@ jump_height = 0.7
 toggle_jump = False
 stop = False
 
+
 def on_press(key):
     global lin_x, lin_y, ang_z, base_height, toggle_jump, jump_height, stop
     try:
-        if key.char == 'w':
+        if key.char == "w":
             lin_x += 0.1
-        elif key.char == 's':
+        elif key.char == "s":
             lin_x -= 0.1
-        elif key.char == 'a':
+        elif key.char == "a":
             lin_y += 0.1
-        elif key.char == 'd':
+        elif key.char == "d":
             lin_y -= 0.1
-        elif key.char == 'q':
+        elif key.char == "q":
             ang_z += 0.1
-        elif key.char == 'e':
+        elif key.char == "e":
             ang_z -= 0.1
-        elif key.char == 'r':
+        elif key.char == "r":
             base_height += 0.1
-        elif key.char == 'f':
+        elif key.char == "f":
             base_height -= 0.1
-        elif key.char == 'j':
+        elif key.char == "j":
             toggle_jump = True
-        elif key.char == 'u':
+        elif key.char == "u":
             jump_height += 0.1
-        elif key.char == 'm':
+        elif key.char == "m":
             jump_height -= 0.1
-        elif key.char == '8':
+        elif key.char == "8":
             stop = True
-            
-        
+
         lin_x = np.clip(lin_x, -1.0, 2.0)
         lin_y = np.clip(lin_y, -0.5, 0.5)
         ang_z = np.clip(ang_z, -0.6, 0.6)
         base_height = np.clip(base_height, 0.1, 0.5)
         jump_height = np.clip(jump_height, 0.5, 1.5)
-        
-            
-        os.system('clear')
-        
-        print(f"lin_x: {lin_x:.2f}, lin_y: {lin_y:.2f}, ang_z: {ang_z:.2f}, base_height: {base_height:.2f}, jump: {toggle_jump*jump_height:.2f}")
+
+        os.system("clear")
+
+        print(
+            f"lin_x: {lin_x:.2f}, lin_y: {lin_y:.2f}, ang_z: {ang_z:.2f}, base_height: {base_height:.2f}, jump: {toggle_jump * jump_height:.2f}"
+        )
     except AttributeError:
         pass
+
 
 def on_release(key):
     if key == keyboard.Key.esc:
         return False
+
 
 def main():
     global lin_x, lin_y, ang_z, base_height, toggle_jump, jump_height, stop
@@ -71,16 +74,18 @@ def main():
     args = parser.parse_args()
 
     gs.init(
-        logger_verbose_time = False,
+        logger_verbose_time=False,
         logging_level="warning",
         backend=gs.constants.backend.gpu,
     )
 
     log_dir = f"logs/{args.exp_name}"
-    env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(open(f"logs/{args.exp_name}/cfgs.pkl", "rb"))
+    env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(
+        open(f"logs/{args.exp_name}/cfgs.pkl", "rb")
+    )
     reward_cfg["reward_scales"] = {}
 
-    env_cfg["termination_if_roll_greater_than"] =  50
+    env_cfg["termination_if_roll_greater_than"] = 50
     env_cfg["termination_if_pitch_greater_than"] = 50
     num_envs = 50
     env = Go2Env(
@@ -92,16 +97,17 @@ def main():
         show_viewer=True,
         add_camera=True,
     )
-    
-    
+
     runner = OnPolicyRunner(env, train_cfg, log_dir, device="cuda:0")
     resume_path = os.path.join(log_dir, f"model_{args.ckpt}.pt")
     runner.load(resume_path)
     policy = runner.get_inference_policy(device="cuda:0")
 
     obs, _ = env.reset()
-    
-    env.commands = torch.tensor([[lin_x, lin_y, ang_z]]).to("cuda:0").repeat(num_envs, 1)
+
+    env.commands = (
+        torch.tensor([[lin_x, lin_y, ang_z]]).to("cuda:0").repeat(num_envs, 1)
+    )
     iter = 0
 
     listener = keyboard.Listener(on_press=on_press, on_release=on_release)
@@ -112,11 +118,13 @@ def main():
     commands_buffer = []
     with torch.no_grad():
         while not stop:
-            
-                
             actions = policy(obs)
 
-            env.commands = torch.tensor([[lin_x, lin_y, ang_z]], dtype=torch.float).to("cuda:0").repeat(num_envs, 1)
+            env.commands = (
+                torch.tensor([[lin_x, lin_y, ang_z]], dtype=torch.float)
+                .to("cuda:0")
+                .repeat(num_envs, 1)
+            )
             obs, _, dones, _ = env.step(actions)
 
             if toggle_jump and reset_jump_toggle_iter == 0:
@@ -124,10 +132,9 @@ def main():
             if iter == reset_jump_toggle_iter and toggle_jump:
                 toggle_jump = False
                 reset_jump_toggle_iter = 0
-                    
+
             iter += 1
-            
-            
+
             if env.cam_0 is not None:
                 rgb, _, _, _ = env.cam_0.render(
                     rgb=True,
@@ -136,16 +143,19 @@ def main():
                 )
                 if args.save_data:
                     images_buffer.append(rgb)
-                    commands_buffer.append([lin_x, lin_y, ang_z, base_height, toggle_jump*jump_height])
-            
+                    commands_buffer.append(
+                        [lin_x, lin_y, ang_z, base_height, toggle_jump * jump_height]
+                    )
+
             if dones.any():
                 iter = 0
-          
+
     if args.save_data:
         images_buffer = np.array(images_buffer)
         commands_buffer = np.array(commands_buffer)
         pickle.dump(images_buffer, open("images_buffer.pkl", "wb"))
         pickle.dump(commands_buffer, open("commands_buffer.pkl", "wb"))
+
 
 if __name__ == "__main__":
     main()
