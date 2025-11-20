@@ -2,7 +2,7 @@ format:
 	ruff format .
 
 train:
-	python3 -m src.go2.go2_train -B 512
+	python3 -m src.go2.go2_train
 
 eval:
 	python3 -m src.go2.go2_eval -e go2-walking --ckpt 100
