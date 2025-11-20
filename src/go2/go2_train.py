@@ -14,11 +14,11 @@ from src.configs import get_cfgs, get_train_cfg
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="go2-walking")
-    parser.add_argument("-B", "--num_envs", type=int, default=1024)
+    parser.add_argument("-B", "--num_envs", type=int, default=2048)
     parser.add_argument("--max_iterations", type=int, default=1200)
     args = parser.parse_args()
 
-    gs.init(backend=gs.constants.backend.gpu)
+    gs.init(backend=gs.constants.backend.gpu, logging_level="Warning")
 
     log_dir = f"logs/{args.exp_name}"
     env_cfg, obs_cfg, reward_cfg, command_cfg = get_cfgs()
