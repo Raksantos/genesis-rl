@@ -7,8 +7,8 @@ train_ppo:
 train_sac:
 	python3 -m src.go2.go2_train -a sac
 
-eval:
-	python3 -m src.go2.go2_eval -e go2-walking --ckpt 100
+eval_ppo:
+	python3 -m src.go2.go2_eval -e go2-walking-ppo --ckpt 1000
 
 eval_sac:
 	python3 -m src.go2.go2_eval -a sac -e go2-walking-sac --sac_step 57600000

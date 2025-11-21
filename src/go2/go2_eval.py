@@ -33,7 +33,7 @@ def build_env(env_cfg, obs_cfg, reward_cfg, command_cfg, device, show_viewer=Tru
 
 def load_ppo_policy(env, train_cfg, log_dir, ckpt_iter: int, device: str):
     runner = OnPolicyRunner(env, train_cfg, log_dir, device=device)
-    resume_path = os.path.join(log_dir, f"checkpoint_{ckpt_iter}.pt")
+    resume_path = os.path.join(log_dir, f"model_{ckpt_iter}.pt")
     runner.load(resume_path)
     policy = runner.get_inference_policy(device=device)
 
@@ -69,7 +69,7 @@ def load_sac_policy(env, log_dir: str, ckpt_step: int, device: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--exp_name", type=str, default="go2-walking")
+    parser.add_argument("-e", "--exp_name", type=str, default="go2-walking-ppo")
     parser.add_argument("-a", "--algo", type=str, choices=["ppo", "sac"], default="ppo")
     parser.add_argument("--ckpt", type=int, default=200)
     parser.add_argument("--sac_step", type=int, default=100000)
