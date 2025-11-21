@@ -60,9 +60,13 @@ class OffPolicyRunner:
         pbar = trange(self.cfg.total_env_steps // self.num_envs)
         for _ in pbar:
             if global_step < self.cfg.init_random_steps:
-                actions = 2 * torch.rand(
-                    (self.num_envs, self.env.num_actions), device=self.device
-                ) - 1
+                actions = (
+                    2
+                    * torch.rand(
+                        (self.num_envs, self.env.num_actions), device=self.device
+                    )
+                    - 1
+                )
                 actions = actions * self.agent.config.action_scale
             else:
                 with torch.no_grad():
@@ -130,7 +134,6 @@ class OffPolicyRunner:
                     f"actor_loss={logs.get('actor_loss', 0):.3f} "
                     f"critic_loss={logs.get('critic_loss', 0):.3f}"
                 )
-
 
     def save_checkpoint(self, path: str, global_step: int):
         checkpoint = {

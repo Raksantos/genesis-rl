@@ -80,14 +80,15 @@ def main():
 
     gs.init(backend=gs.constants.backend.gpu)
 
-
     log_dir = f"logs/{args.exp_name}"
 
     env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(
         open(os.path.join(log_dir, "cfgs.pkl"), "rb")
     )
 
-    env = build_env(env_cfg, obs_cfg, reward_cfg, command_cfg, args.device, show_viewer=True)
+    env = build_env(
+        env_cfg, obs_cfg, reward_cfg, command_cfg, args.device, show_viewer=True
+    )
 
     # Escolhe a política de acordo com o algoritmo
     if args.algo == "ppo":
