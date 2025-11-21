@@ -1,14 +1,17 @@
 format:
 	ruff format .
 
-train:
-	python3 -m src.go2.go2_train
+train_ppo:
+	python3 -m src.go2.go2_train -a ppo
+
+train_sac:
+	python3 -m src.go2.go2_train -a sac
 
 eval:
 	python3 -m src.go2.go2_eval -e go2-walking --ckpt 100
 
-eval_teleop:
-	python3 -m src.go2.go2_eval_teleop -e go2-walking --ckpt 100
+eval_sac:
+	python3 -m src.go2.go2_eval -a sac -e go2-walking-sac --sac_step 57600000
 
 train_and_eval:
 	python3 -m src.go2.go2_train
