@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="go2-walking")
     parser.add_argument("-B", "--num_envs", type=int, default=2048)
-    parser.add_argument("--max_iterations", type=int, default=1200)
+    parser.add_argument("--max_iterations", type=int, default=2000)
     parser.add_argument("-a", "--algorithm", type=str, default="ppo")
     args = parser.parse_args()
 

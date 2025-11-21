@@ -14,12 +14,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="go2-sb3-sac")
 
-    parser.add_argument("--total_timesteps", type=int, default=100_000)
+    parser.add_argument("--total_timesteps", type=int, default=200_000)
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     args = parser.parse_args()
 
-
-    backend = gs.constants.backend.gpu if args.device == "cuda" else gs.constants.backend.cpu
+    backend = (
+        gs.constants.backend.gpu if args.device == "cuda" else gs.constants.backend.cpu
+    )
     gs.init(backend=backend, logging_level="Warning")
 
     log_dir = os.path.join("logs", args.exp_name)

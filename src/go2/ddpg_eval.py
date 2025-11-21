@@ -5,15 +5,15 @@ import pickle
 import genesis as gs
 import numpy as np
 import torch
-from stable_baselines3 import SAC
+from stable_baselines3 import DDPG
 
 from src.go2.go2_sb3_env import Go2GymEnv
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--exp_name", type=str, default="go2-sb3-sac")
-    parser.add_argument("--model_path", type=str, default="sac_final.zip")
+    parser.add_argument("-e", "--exp_name", type=str, default="go2-sb3-ddpg")
+    parser.add_argument("--model_path", type=str, default="ddpg_final.zip")
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     args = parser.parse_args()
 
@@ -39,7 +39,7 @@ def main():
         show_viewer=True,
     )
 
-    model = SAC.load(os.path.join(log_dir, args.model_path), device=args.device)
+    model = DDPG.load(os.path.join(log_dir, args.model_path), device=args.device)
 
     obs, _ = env.reset()
     t = 0
@@ -48,15 +48,10 @@ def main():
     while True:
         action, _ = model.predict(obs, deterministic=True)
 
-        lin_x = (
-            lin_x_range[0]
-            + (lin_x_range[1] - lin_x_range[0])
-            * (np.sin(2 * np.pi * t / 600) + 1)
-            / 2
-        )
+        lin_x = lin_x_range[0] + (lin_x_range[1] - lin_x_range[0]) * (np.sin(2 * np.pi * t / 600) + 1) / 2
         env.go2_env.commands = torch.tensor([[lin_x, 0.0, 0.0]], device=env.device)
 
-        obs, _, terminated, truncated, info = env.step(action)
+        obs, _, terminated, truncated, _ = env.step(action)
         t += 1
         if terminated or truncated:
             t = 0

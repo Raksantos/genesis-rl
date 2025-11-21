@@ -9,7 +9,15 @@ from src.go2 import Go2Env
 class Go2GymEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 50}
 
-    def __init__(self, env_cfg, obs_cfg, reward_cfg, command_cfg, device="cuda:0", show_viewer=False):
+    def __init__(
+        self,
+        env_cfg,
+        obs_cfg,
+        reward_cfg,
+        command_cfg,
+        device="cuda:0",
+        show_viewer=False,
+    ):
         super().__init__()
 
         self.device = torch.device(device)

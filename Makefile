@@ -2,18 +2,25 @@ format:
 	ruff format .
 
 train_ppo:
-	python3 -m src.go2.go2_train -a ppo
+	python3 -m src.go2.ppo_train
 
 train_sac:
-	python3 -m src.go2.go2_train -a sac
+	python3 -m src.go2.sac_train
+
+train_td3:
+	python3 -m src.go2.td3_train
+
+train_ddpg:
+	python3 -m src.go2.ddpg_train
 
 eval_ppo:
-	python3 -m src.go2.go2_eval -e go2-walking-ppo --ckpt 1100
+	python3 -m src.go2.ppo_eval -e go2-walking-ppo --ckpt 1100
 
 eval_sac:
-	python3 -m src.go2.go2_eval -a sac -e go2-walking-sac --sac_step 57600000
+	python3 -m src.go2.sac_eval -a sac -e go2-walking-sac --sac_step 57600000
 
-train_and_eval:
-	python3 -m src.go2.go2_train
-	sleep 20
-	python3 -m src.go2.go2_eval -e go2-walking --ckpt 100
+eval_td3:
+	python3 -m src.go2.td3_eval -e go
+
+eval_ddpg:
+	python3 -m src.go2.ddpg_eval -a ddpg -e go2-walking-ddpg --ddpg_step 57600000

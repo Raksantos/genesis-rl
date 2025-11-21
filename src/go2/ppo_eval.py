@@ -13,10 +13,8 @@ from src.algorithms import SACAgent, SACConfig, OffPolicyRunner
 
 
 def build_env(env_cfg, obs_cfg, reward_cfg, command_cfg, device, show_viewer=True):
-    # Para eval, normalmente tiramos os rewards para não acumular nada estranho
     reward_cfg["reward_scales"] = {}
 
-    # Relaxar terminação pra brincar mais no viewer
     env_cfg["termination_if_roll_greater_than"] = 50
     env_cfg["termination_if_pitch_greater_than"] = 50
 
@@ -39,7 +37,6 @@ def load_ppo_policy(env, train_cfg, log_dir, ckpt_iter: int, device: str):
 
     @torch.no_grad()
     def act_fn(obs: torch.Tensor) -> torch.Tensor:
-        # obs já vem com shape [1, obs_dim]
         return policy(obs.to(device))
 
     return act_fn
@@ -90,15 +87,13 @@ def main():
         env_cfg, obs_cfg, reward_cfg, command_cfg, args.device, show_viewer=True
     )
 
-    # Escolhe a política de acordo com o algoritmo
     if args.algo == "ppo":
         act_fn = load_ppo_policy(env, train_cfg, log_dir, args.ckpt, args.device)
-    else:  # sac
+    else:
         act_fn = load_sac_policy(env, log_dir, args.sac_step, args.device)
 
     obs, _ = env.reset()
 
-    # Comando de velocidade variando em seno, como você já fazia
     env.commands = torch.tensor([[0.5, 0.0, 0.0]], device=args.device)
     t = 0
     lin_x_range = [0.5, 4.0]
