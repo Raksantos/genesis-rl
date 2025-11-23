@@ -178,15 +178,26 @@ class Go2Env:
         self.extras["observations"] = dict()
 
     def _resample_commands(self, envs_idx):
+        if len(envs_idx) == 0:
+            return
+
         self.commands[envs_idx, 0] = gs_rand_float(
-            *self.command_cfg["lin_vel_x_range"], (len(envs_idx),), gs.device
-        )
+            *self.command_cfg["lin_vel_x_range"],
+            (len(envs_idx),),
+            gs.device,
+        ).to(self.commands.dtype)
+
         self.commands[envs_idx, 1] = gs_rand_float(
-            *self.command_cfg["lin_vel_y_range"], (len(envs_idx),), gs.device
-        )
+            *self.command_cfg["lin_vel_y_range"],
+            (len(envs_idx),),
+            gs.device,
+        ).to(self.commands.dtype)
+
         self.commands[envs_idx, 2] = gs_rand_float(
-            *self.command_cfg["ang_vel_range"], (len(envs_idx),), gs.device
-        )
+            *self.command_cfg["ang_vel_range"],
+            (len(envs_idx),),
+            gs.device,
+        ).to(self.commands.dtype)
 
     def step(self, actions):
         self.actions = torch.clip(

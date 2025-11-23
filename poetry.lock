@@ -272,6 +272,18 @@ files = [
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "cloudpickle"
+version = "3.1.2"
+description = "Pickler class to extend the standard pickle.Pickler functionality"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "cloudpickle-3.1.2-py3-none-any.whl", hash = "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a"},
+    {file = "cloudpickle-3.1.2.tar.gz", hash = "sha256:7fda9eb655c9c230dab534f1983763de5835249750e85fbcef43aaa30a9a2414"},
+]
+
+[[package]]
 name = "coacd"
 version = "1.0.7"
 description = "Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search"
@@ -520,6 +532,18 @@ groups = ["main"]
 markers = "\"linux\" in sys_platform"
 files = [
     {file = "evdev-1.9.2.tar.gz", hash = "sha256:5d3278892ce1f92a74d6bf888cc8525d9f68af85dbe336c95d1c87fb8f423069"},
+]
+
+[[package]]
+name = "farama-notifications"
+version = "0.0.4"
+description = "Notifications for all Farama Foundation maintained libraries."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "Farama-Notifications-0.0.4.tar.gz", hash = "sha256:13fceff2d14314cf80703c8266462ebf3733c7d165336eee998fc58e545efd18"},
+    {file = "Farama_Notifications-0.0.4-py3-none-any.whl", hash = "sha256:14de931035a41961f7c056361dc7f980762a143d05791ef5794a751a2caf05ae"},
 ]
 
 [[package]]
@@ -936,6 +960,37 @@ numpy = ">=1.26.0"
 pydantic = ">=2.0.0"
 rich = ">=1.0.0"
 setuptools = ">=77.0.0"
+
+[[package]]
+name = "gymnasium"
+version = "1.2.2"
+description = "A standard API for reinforcement learning and a diverse set of reference environments (formerly Gym)."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "gymnasium-1.2.2-py3-none-any.whl", hash = "sha256:f04ec362b1fdf73a8b327db5ef89384a3f2ba411e05d3521513414fbbb2199c8"},
+    {file = "gymnasium-1.2.2.tar.gz", hash = "sha256:46d927328f8518bb5a689dbe270d228c1da2b08bcb71ae0152c10aa66f48d530"},
+]
+
+[package.dependencies]
+cloudpickle = ">=1.2.0"
+farama-notifications = ">=0.0.1"
+numpy = ">=1.21.0"
+typing-extensions = ">=4.3.0"
+
+[package.extras]
+all = ["ale_py (>=0.9)", "array-api-compat (>=1.11.0)", "array-api-compat (>=1.11.0)", "array-api-compat (>=1.11.0)", "box2d-py (==2.3.5)", "flax (>=0.5.0)", "imageio (>=2.14.1)", "jax (>=0.4.16)", "jaxlib (>=0.4.16)", "matplotlib (>=3.0)", "moviepy (>=1.0.0)", "mujoco (>=2.1.5)", "numpy (>=2.1)", "numpy (>=2.1)", "numpy (>=2.1)", "opencv-python (>=3.0)", "packaging (>=23.0)", "pygame (>=2.1.3)", "pygame (>=2.1.3)", "pygame (>=2.1.3)", "swig (==4.*)", "torch (>=1.13.0)"]
+array-api = ["array-api-compat (>=1.11.0)", "numpy (>=2.1)", "packaging (>=23.0)"]
+atari = ["ale_py (>=0.9)"]
+box2d = ["box2d-py (==2.3.5)", "pygame (>=2.1.3)", "swig (==4.*)"]
+classic-control = ["pygame (>=2.1.3)", "pygame (>=2.1.3)"]
+jax = ["array-api-compat (>=1.11.0)", "flax (>=0.5.0)", "jax (>=0.4.16)", "jaxlib (>=0.4.16)", "numpy (>=2.1)"]
+mujoco = ["imageio (>=2.14.1)", "mujoco (>=2.1.5)", "packaging (>=23.0)"]
+other = ["matplotlib (>=3.0)", "moviepy (>=1.0.0)", "opencv-python (>=3.0)", "seaborn (>=0.13)"]
+testing = ["array_api_extra (>=0.7.0)", "dill (>=0.3.7)", "pytest (>=7.1.3)", "scipy (>=1.7.3)"]
+torch = ["array-api-compat (>=1.11.0)", "numpy (>=2.1)", "torch (>=1.13.0)"]
+toy-text = ["pygame (>=2.1.3)", "pygame (>=2.1.3)"]
 
 [[package]]
 name = "idna"
@@ -2096,61 +2151,61 @@ numpy = {version = ">=1.26.0", markers = "python_version >= \"3.12\""}
 
 [[package]]
 name = "openexr"
-version = "3.4.3"
+version = "3.4.4"
 description = "Python bindings for the OpenEXR image file format"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "openexr-3.4.3-cp310-cp310-macosx_10_15_universal2.whl", hash = "sha256:682c8fe8b1cf6c0ed45a425de562c4ea462351475a4141962ab715c47b09c079"},
-    {file = "openexr-3.4.3-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:5c958cac950cf90c91a659e5d4e3e2aaa69a6eadbae38f954a64cc366665b017"},
-    {file = "openexr-3.4.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f4f207c6d1b5a6236977a15cbaf07e303513e55cb91b4bdfc745d7eb27b53a47"},
-    {file = "openexr-3.4.3-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:dbbf6577b0e1a57c2ed5be976e7cecb2d6e03b3e25143b54973f418484a7f289"},
-    {file = "openexr-3.4.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cc12a5442b29ad655279f6ed267d6387ac2f6459b30af0446fdc7dc983474d4a"},
-    {file = "openexr-3.4.3-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:196c58aa27d768ed7248bb52b53cfab379054c89a82f588bafcde101a9054dc5"},
-    {file = "openexr-3.4.3-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:9753716e3699f3ff2891caa6b0c5eaf516bfd19cec48a50fe476fa8e3a2a95e8"},
-    {file = "openexr-3.4.3-cp310-cp310-win_amd64.whl", hash = "sha256:518f6ccb3608b01897ff72f9aa5af1060169e24fa57e3081c1b4f8252e3bc69a"},
-    {file = "openexr-3.4.3-cp311-cp311-macosx_10_15_universal2.whl", hash = "sha256:f5bb0ca26873b96eaa5cd00c21994666704cee533c6ee21b8640267fbf264e1b"},
-    {file = "openexr-3.4.3-cp311-cp311-macosx_10_15_x86_64.whl", hash = "sha256:7eeb69fa222845609aa54aa3a694b4c297f8f79cd01d0040516f41aeef6962f2"},
-    {file = "openexr-3.4.3-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:74cf2d6eb79774925466b1e2d4dc11a76ebf9b8d6c79e947be86f217a062b2d5"},
-    {file = "openexr-3.4.3-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5cb7f801edb9bab3aa1e71323cda3fe2fb12e791b8cde621fbd651c29fb13ec0"},
-    {file = "openexr-3.4.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bdd491727a77a7c0d843171a428f73dce605d4d6c3423c2617a71f2f074ac542"},
-    {file = "openexr-3.4.3-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:ddc668d8d4caeebc29b45d2962937688c47a54e27a9d17171b145b18e5c7d7d3"},
-    {file = "openexr-3.4.3-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:101f7e539c0eb9d34c287dd692ef52dc8ec9603c1baba0250960aaffb44fc73d"},
-    {file = "openexr-3.4.3-cp311-cp311-win_amd64.whl", hash = "sha256:0fd3e288248ab83786ba0e08e3fc40a09927dd9a676679e0b5c0265cb0ef0028"},
-    {file = "openexr-3.4.3-cp312-cp312-macosx_10_15_universal2.whl", hash = "sha256:11df11cfeaa006f17907f4bd82f4348fd8d8662463925aab7d27b4e9c8274307"},
-    {file = "openexr-3.4.3-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:1587903b57e900f1fbbed1d0e70abcea2e1b15a06fd9778b8b2ab1e3159c6014"},
-    {file = "openexr-3.4.3-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:35d77340a9ff947d13ccc9a279fafc7f176c5ca51a2c31be658b1a1c26797917"},
-    {file = "openexr-3.4.3-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:421765244eac31bf1e9afe4dda4039efa4965c2b0174cdd558e388bed32e70ad"},
-    {file = "openexr-3.4.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6e0e49895b14f2e725f22dc66ad8b598a0d7e6425bf2068e8ae5e68d312fa677"},
-    {file = "openexr-3.4.3-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:45d64be409a2f5daab36759d5b3843f2bbfe9359cc692f9ec2f5a3d00561f9fb"},
-    {file = "openexr-3.4.3-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:fbdaf6c7f849705b698ae9ab9412c2d45ac66e736131ef15adef52ffef302dc1"},
-    {file = "openexr-3.4.3-cp312-cp312-win_amd64.whl", hash = "sha256:7676df5477aac291ca3220428357ae36f5698666e49d000dc970426beca49116"},
-    {file = "openexr-3.4.3-cp313-cp313-macosx_10_15_universal2.whl", hash = "sha256:c38adf9f63503d49c5c18a84796f3da98081af1a1b7c1cabea4417f9c96b1cfc"},
-    {file = "openexr-3.4.3-cp313-cp313-macosx_10_15_x86_64.whl", hash = "sha256:cfd401eda4d5d65698d58efb0172e5978fc395fe88e9fe5350b5396bf31d9f7a"},
-    {file = "openexr-3.4.3-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:db2ada38ecdc83c74320b79feda5113ec015e88784f8ba306b39ab3cf9012bb1"},
-    {file = "openexr-3.4.3-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7f778d7114aaa7517989ca2224e755642e73b72cb9de785368e988f5356970a3"},
-    {file = "openexr-3.4.3-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5d4b92ad60900e78bf3d23e942d90fae704998a3845e7fcbdf014d10f64c5727"},
-    {file = "openexr-3.4.3-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:37d535148c841bcd0fb45673da9474e5cd5b27cc9b3b4508f4401f573f718798"},
-    {file = "openexr-3.4.3-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:dafec6529c356eb90fce6ee1b66da76f51163815ed9b37eedb0cd2d21bc08376"},
-    {file = "openexr-3.4.3-cp313-cp313-win_amd64.whl", hash = "sha256:de052332e03e67a6297b18aee1c818e73efa468f3fc7ee12755a45676d7a55ab"},
-    {file = "openexr-3.4.3-cp38-cp38-macosx_10_15_universal2.whl", hash = "sha256:760e87178841bd5d4b2b46cacef334e43e27f5756dd9804db901ad6562e16557"},
-    {file = "openexr-3.4.3-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:f0dd3a84811f48a9f5b94a6ecf22b8a985d0756093072bb2da71812a70c2a0e5"},
-    {file = "openexr-3.4.3-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:c38d4537c964ee83f9870a546da94cb402542dd823effd837d6693884c1233ae"},
-    {file = "openexr-3.4.3-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2f404dd00b7ce94eacd1feb82107e362725a1f73aed88b63d589eafbcab23738"},
-    {file = "openexr-3.4.3-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e3d4cb4fb5e9ac13981e7d5f84936cac04cc863c9ee771fd1e1a773bf24c0815"},
-    {file = "openexr-3.4.3-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:17a9f611dba28e7511023ae57e920ed4cb96cfef0b95202c773ce877da2dbc7a"},
-    {file = "openexr-3.4.3-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:45ea2d8351694810b4e1dd23c9a3b654d0fc73f45f0ea44e8825698ee3e8515b"},
-    {file = "openexr-3.4.3-cp38-cp38-win_amd64.whl", hash = "sha256:b5a0a8f7f5cbe69d5d00bd2dc6eb067f338852b472d5e74e9f47b746590e5afa"},
-    {file = "openexr-3.4.3-cp39-cp39-macosx_10_15_universal2.whl", hash = "sha256:eeca440a2fb8d262bd10a921b4a387597dcf73c54386ee8d3a254641def90e17"},
-    {file = "openexr-3.4.3-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:57ac5c711a64db00f0000b383ceb5214c9d93e775c256027199b4b6af5d83311"},
-    {file = "openexr-3.4.3-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:3402591353075a0a940fb8c74794efd0f64232682f6134d0409d55c6b818e31d"},
-    {file = "openexr-3.4.3-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:996736f4c2d76d61161683959d9abea707978fff8dc3dce41b492a195ce1a24b"},
-    {file = "openexr-3.4.3-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f4298af10efe6873d73ec857a295025ea7301c98d3ee026fe0cb4dae710a0d1f"},
-    {file = "openexr-3.4.3-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:b4f1aacc01ce49d7da654bfe73662c30fb785549ec1264858fc93da16aacc183"},
-    {file = "openexr-3.4.3-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:cf935eba52de526e8fc7f34eb2b599192cc489e6199a3b2e6bc4a7584d8a1dad"},
-    {file = "openexr-3.4.3-cp39-cp39-win_amd64.whl", hash = "sha256:459ed6683821b5d596900cbb781fe2ed2ec9b1812d071969a7ed8e8060a53b86"},
-    {file = "openexr-3.4.3.tar.gz", hash = "sha256:432926d468104769b3b33c5a186f3df3d2e208cbdb2a1cacd86e3d78e1378e40"},
+    {file = "openexr-3.4.4-cp310-cp310-macosx_10_15_universal2.whl", hash = "sha256:600ace6c8f0ffea81102b7467c09f0c6fa6a8434777bac2f56beacd02bc1cc24"},
+    {file = "openexr-3.4.4-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:3b030a29ec42b9beb7d47711cf25201f46a7eef7ce162772ca7e3e74045bd926"},
+    {file = "openexr-3.4.4-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:a6a1e9e69c6605e624b9fa7c5e5afeeb04e4f553356993b1554920a88cca4ab5"},
+    {file = "openexr-3.4.4-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:fa48109da7536789024c16f8230652f5877210402e1a11d3f85fd47148e1919e"},
+    {file = "openexr-3.4.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:2c50d64484ed5439ae66ea887131de2663e32f8715c13ae618fbafca69be90b1"},
+    {file = "openexr-3.4.4-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:9cb832d2ce6cf1a354889df74bab88f1ef9500a5718a1642b0357d996c657c3f"},
+    {file = "openexr-3.4.4-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:9c6bec9dcaf48afe13b6c271613ed662d1375eb3762655539cee5366eb402536"},
+    {file = "openexr-3.4.4-cp310-cp310-win_amd64.whl", hash = "sha256:d8f92a6779487662463badf7220b7864f6efd78452e34f50a18170d8bbc09338"},
+    {file = "openexr-3.4.4-cp311-cp311-macosx_10_15_universal2.whl", hash = "sha256:ff3dc7bcdea6c874c18c29c7154f6444a37797891accc81037e2d1546dcb459e"},
+    {file = "openexr-3.4.4-cp311-cp311-macosx_10_15_x86_64.whl", hash = "sha256:c718205d2f2f662e43983fb542cab6d7c8e4ded1a20bfa8219104949c895a365"},
+    {file = "openexr-3.4.4-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:a39eae2f8c61c7bc5e45fe281e94407386517551991a18a0fa8fa77d93c851bc"},
+    {file = "openexr-3.4.4-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:1a476dc05409b7225d207c08734d1169d53e4efc2a2723f5e6e8408f3a9fee21"},
+    {file = "openexr-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:959b9d62798db5f93278e24254326b62bf971a08ff4481e177b300b457ba375d"},
+    {file = "openexr-3.4.4-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:c6fb430916c52b0eb190413b41c42ed53fd159a48cb9f40b1ccde88c6cfd9a3b"},
+    {file = "openexr-3.4.4-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:138d98d3b206468bce4b77874157eaadd508cf6840fb5cc653b7a9df901d0b08"},
+    {file = "openexr-3.4.4-cp311-cp311-win_amd64.whl", hash = "sha256:b0dc990078f120b859d21ea5357e829f76e4fea79ef4f1fd630d544e3cc8d2af"},
+    {file = "openexr-3.4.4-cp312-cp312-macosx_10_15_universal2.whl", hash = "sha256:0e561a9144c04f326b913652c6399c9eba09755f4ef9632ad2e179eca991d35e"},
+    {file = "openexr-3.4.4-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:4d22fda8019c214269ec9fa378e43a43ca16dbe89228ea3768f9b889ff65f60d"},
+    {file = "openexr-3.4.4-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:bfd6efdff851f06f5702b95115ae6f314972ec5fe0a1ab190e08304e9180e976"},
+    {file = "openexr-3.4.4-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:b04549166bba49c6f65caa2d192e338bc3c7d0670a91f577de424cf4221cac38"},
+    {file = "openexr-3.4.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:1085ca20a6ae9870ec27d4f1e1f7cc0ee87a39a672f9971f036a80bd11d8c8e8"},
+    {file = "openexr-3.4.4-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:b3b5f5bc6dbfba398a8dcbcbf4d3b332da6fd134d47a288239dfb85457435cc8"},
+    {file = "openexr-3.4.4-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:5443b222b0bced2c8353befb62807cdc18e3f0ef82e086b30b9c3e755513e1dd"},
+    {file = "openexr-3.4.4-cp312-cp312-win_amd64.whl", hash = "sha256:12edaf40a5febb889ba97336b300f92a3dc308c060f577674156b911d8aa742f"},
+    {file = "openexr-3.4.4-cp313-cp313-macosx_10_15_universal2.whl", hash = "sha256:cca3bb1bd0e94b5654e1ead81cc5eccd7f8336a245d1a8f663a58e339fd178e8"},
+    {file = "openexr-3.4.4-cp313-cp313-macosx_10_15_x86_64.whl", hash = "sha256:9f09c29aa634fa438abd59ead775c3ca3fc3d234585f9437add249866cee7b0e"},
+    {file = "openexr-3.4.4-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:01ba479d80a2fb784ab7afed460d922735f2aab8f45ad20cb1d70af5c46ab931"},
+    {file = "openexr-3.4.4-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:39b09d703a0c631d7b56c91bba7ace2ab7d174e296964dae4c7d186d051c6780"},
+    {file = "openexr-3.4.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:292cc335ae44b1ac71c16282767b7cff4b7a6303e894107a53416cf51146d91c"},
+    {file = "openexr-3.4.4-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:6663b09c0ad01f17974c50fea192baa07235879ac4a3d7308f5ec5e624c51d9f"},
+    {file = "openexr-3.4.4-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:0c6059f9ab04dfa138ebc27d21a4849e3eacb6bff93479c95d626320694a35ac"},
+    {file = "openexr-3.4.4-cp313-cp313-win_amd64.whl", hash = "sha256:c6a80b0ad7120c01d870caffa680130a7b0d4d2e2396d2e79e14cfaa037245a9"},
+    {file = "openexr-3.4.4-cp38-cp38-macosx_10_15_universal2.whl", hash = "sha256:d814a2a0b11ea1325ec13ccb43f6ad3875421e9e15cc79856c2ecaf934f7605b"},
+    {file = "openexr-3.4.4-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:087b9ce7f9a54b597ecbf63e2388ec6f9b73c232ce8b8aac4e93cccff31bab82"},
+    {file = "openexr-3.4.4-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:d1b07d37ba651f05993a3e9f0c488bca68fdd50d05590f6bf103b988a0a6bee6"},
+    {file = "openexr-3.4.4-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:e21d340d1744f99d81526db742a078e60f281be49eae12b77328ef6d54e7c18b"},
+    {file = "openexr-3.4.4-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:05b260f3ed350307d8c3930bd9128523eee1727bc67b841fdc0f98804968e5db"},
+    {file = "openexr-3.4.4-cp38-cp38-musllinux_1_2_aarch64.whl", hash = "sha256:04d9d5fbda49253959364d0a80cec23791cacca4c58a2d7259897b902760015d"},
+    {file = "openexr-3.4.4-cp38-cp38-musllinux_1_2_x86_64.whl", hash = "sha256:3c7fc6794b80c379a25c42db9cabcca621d91852b43ca3f74915c462860b31fc"},
+    {file = "openexr-3.4.4-cp38-cp38-win_amd64.whl", hash = "sha256:b0b8a8dfa761a73a959177c1ea5cdc77e518687373dea3dc7c9d91b9fdca1f53"},
+    {file = "openexr-3.4.4-cp39-cp39-macosx_10_15_universal2.whl", hash = "sha256:c56e62a93171f02698cce25757d2c390abf0ad278e65ad76af5fc17531fc46f8"},
+    {file = "openexr-3.4.4-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:86a96853de3fca3255ffde6a553076b1f4bdddc1b754e238dbacd507219e5187"},
+    {file = "openexr-3.4.4-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f3f0408486efc17f903d61a5b08239529181778b8e5e364cb049173f490a8059"},
+    {file = "openexr-3.4.4-cp39-cp39-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:42ad4a0142113d7030e4f53128ccf2ad1e8494762683304e23ad2d31ae619bdc"},
+    {file = "openexr-3.4.4-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:add628a18aee8b2d4d4b0d3526074ce7cd900f49e32efb85096a87d47d658d07"},
+    {file = "openexr-3.4.4-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:24aed3950193a9e90445e37f24fdcc3e2d83ada0dec41fa3f56df418ee9f179a"},
+    {file = "openexr-3.4.4-cp39-cp39-musllinux_1_2_x86_64.whl", hash = "sha256:558aadc8c84ec41f2b7f5f4bddb27f1a008d4cb02a6d5ac4466369b7c8f38035"},
+    {file = "openexr-3.4.4-cp39-cp39-win_amd64.whl", hash = "sha256:5c0420579503a9fdc649d18c54b84d3e46a6da52ef20f1e0739f5ce31ebbc1ae"},
+    {file = "openexr-3.4.4.tar.gz", hash = "sha256:9bf1f559a3133bb9c5cbfdea74d867816a06a654189ecbc6b3b44c8276fa0441"},
 ]
 
 [package.dependencies]
@@ -3261,31 +3316,31 @@ files = [
 
 [[package]]
 name = "ruff"
-version = "0.14.5"
+version = "0.14.6"
 description = "An extremely fast Python linter and code formatter, written in Rust."
 optional = false
 python-versions = ">=3.7"
 groups = ["dev"]
 files = [
-    {file = "ruff-0.14.5-py3-none-linux_armv6l.whl", hash = "sha256:f3b8248123b586de44a8018bcc9fefe31d23dda57a34e6f0e1e53bd51fd63594"},
-    {file = "ruff-0.14.5-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:f7a75236570318c7a30edd7f5491945f0169de738d945ca8784500b517163a72"},
-    {file = "ruff-0.14.5-py3-none-macosx_11_0_arm64.whl", hash = "sha256:6d146132d1ee115f8802356a2dc9a634dbf58184c51bff21f313e8cd1c74899a"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e2380596653dcd20b057794d55681571a257a42327da8894b93bbd6111aa801f"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:2d1fa985a42b1f075a098fa1ab9d472b712bdb17ad87a8ec86e45e7fa6273e68"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:88f0770d42b7fa02bbefddde15d235ca3aa24e2f0137388cc15b2dcbb1f7c7a7"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:3676cb02b9061fee7294661071c4709fa21419ea9176087cb77e64410926eb78"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b595bedf6bc9cab647c4a173a61acf4f1ac5f2b545203ba82f30fcb10b0318fb"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:f55382725ad0bdb2e8ee2babcbbfb16f124f5a59496a2f6a46f1d9d99d93e6e2"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7497d19dce23976bdaca24345ae131a1d38dcfe1b0850ad8e9e6e4fa321a6e19"},
-    {file = "ruff-0.14.5-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:410e781f1122d6be4f446981dd479470af86537fb0b8857f27a6e872f65a38e4"},
-    {file = "ruff-0.14.5-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:c01be527ef4c91a6d55e53b337bfe2c0f82af024cc1a33c44792d6844e2331e1"},
-    {file = "ruff-0.14.5-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:f66e9bb762e68d66e48550b59c74314168ebb46199886c5c5aa0b0fbcc81b151"},
-    {file = "ruff-0.14.5-py3-none-musllinux_1_2_i686.whl", hash = "sha256:d93be8f1fa01022337f1f8f3bcaa7ffee2d0b03f00922c45c2207954f351f465"},
-    {file = "ruff-0.14.5-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:c135d4b681f7401fe0e7312017e41aba9b3160861105726b76cfa14bc25aa367"},
-    {file = "ruff-0.14.5-py3-none-win32.whl", hash = "sha256:c83642e6fccfb6dea8b785eb9f456800dcd6a63f362238af5fc0c83d027dd08b"},
-    {file = "ruff-0.14.5-py3-none-win_amd64.whl", hash = "sha256:9d55d7af7166f143c94eae1db3312f9ea8f95a4defef1979ed516dbb38c27621"},
-    {file = "ruff-0.14.5-py3-none-win_arm64.whl", hash = "sha256:4b700459d4649e2594b31f20a9de33bc7c19976d4746d8d0798ad959621d64a4"},
-    {file = "ruff-0.14.5.tar.gz", hash = "sha256:8d3b48d7d8aad423d3137af7ab6c8b1e38e4de104800f0d596990f6ada1a9fc1"},
+    {file = "ruff-0.14.6-py3-none-linux_armv6l.whl", hash = "sha256:d724ac2f1c240dbd01a2ae98db5d1d9a5e1d9e96eba999d1c48e30062df578a3"},
+    {file = "ruff-0.14.6-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:9f7539ea257aa4d07b7ce87aed580e485c40143f2473ff2f2b75aee003186004"},
+    {file = "ruff-0.14.6-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7f6007e55b90a2a7e93083ba48a9f23c3158c433591c33ee2e99a49b889c6332"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0a8e7b9d73d8728b68f632aa8e824ef041d068d231d8dbc7808532d3629a6bef"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:d50d45d4553a3ebcbd33e7c5e0fe6ca4aafd9a9122492de357205c2c48f00775"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:118548dd121f8a21bfa8ab2c5b80e5b4aed67ead4b7567790962554f38e598ce"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:57256efafbfefcb8748df9d1d766062f62b20150691021f8ab79e2d919f7c11f"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:ff18134841e5c68f8e5df1999a64429a02d5549036b394fafbe410f886e1989d"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:29c4b7ec1e66a105d5c27bd57fa93203637d66a26d10ca9809dc7fc18ec58440"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:167843a6f78680746d7e226f255d920aeed5e4ad9c03258094a2d49d3028b105"},
+    {file = "ruff-0.14.6-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:16a33af621c9c523b1ae006b1b99b159bf5ac7e4b1f20b85b2572455018e0821"},
+    {file = "ruff-0.14.6-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:1432ab6e1ae2dc565a7eea707d3b03a0c234ef401482a6f1621bc1f427c2ff55"},
+    {file = "ruff-0.14.6-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:4c55cfbbe7abb61eb914bfd20683d14cdfb38a6d56c6c66efa55ec6570ee4e71"},
+    {file = "ruff-0.14.6-py3-none-musllinux_1_2_i686.whl", hash = "sha256:efea3c0f21901a685fff4befda6d61a1bf4cb43de16da87e8226a281d614350b"},
+    {file = "ruff-0.14.6-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:344d97172576d75dc6afc0e9243376dbe1668559c72de1864439c4fc95f78185"},
+    {file = "ruff-0.14.6-py3-none-win32.whl", hash = "sha256:00169c0c8b85396516fdd9ce3446c7ca20c2a8f90a77aa945ba6b8f2bfe99e85"},
+    {file = "ruff-0.14.6-py3-none-win_amd64.whl", hash = "sha256:390e6480c5e3659f8a4c8d6a0373027820419ac14fa0d2713bd8e6c3e125b8b9"},
+    {file = "ruff-0.14.6-py3-none-win_arm64.whl", hash = "sha256:d43c81fbeae52cfa8728d8766bbf46ee4298c888072105815b392da70ca836b2"},
+    {file = "ruff-0.14.6.tar.gz", hash = "sha256:6f0c742ca6a7783a736b867a263b9a7a80a45ce9bee391eeda296895f1b4e1cc"},
 ]
 
 [[package]]
@@ -3540,6 +3595,31 @@ files = [
     {file = "smmap-5.0.2-py3-none-any.whl", hash = "sha256:b30115f0def7d7531d22a0fb6502488d879e75b260a9db4d0819cfb25403af5e"},
     {file = "smmap-5.0.2.tar.gz", hash = "sha256:26ea65a03958fa0c8a1c7e8c7a58fdc77221b8910f6be2131affade476898ad5"},
 ]
+
+[[package]]
+name = "stable-baselines3"
+version = "2.7.0"
+description = "Pytorch version of Stable Baselines, implementations of reinforcement learning algorithms."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "stable_baselines3-2.7.0-py3-none-any.whl", hash = "sha256:3de94fab840b3eb379a352c8d9b390998686d2fcb41de36298066935eef94bea"},
+    {file = "stable_baselines3-2.7.0.tar.gz", hash = "sha256:5258561e5becd15234274262cf09fcb9a082a73c2c67a85322f5652a05195ec4"},
+]
+
+[package.dependencies]
+cloudpickle = "*"
+gymnasium = ">=0.29.1,<1.3.0"
+matplotlib = "*"
+numpy = ">=1.20,<3.0"
+pandas = "*"
+torch = ">=2.3,<3.0"
+
+[package.extras]
+docs = ["sphinx (>=5,<9)", "sphinx-autobuild", "sphinx-rtd-theme (>=1.3.0)", "sphinx_copybutton", "sphinxcontrib.spelling"]
+extra = ["ale-py (>=0.9.0)", "opencv-python", "pillow", "psutil", "pygame", "rich", "tensorboard (>=2.9.1)", "tqdm"]
+tests = ["black (>=25.1.0,<26)", "mypy", "pytest", "pytest-cov", "pytest-env", "pytest-xdist", "ruff (>=0.3.1)"]
 
 [[package]]
 name = "sympy"
@@ -4198,4 +4278,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13, <3.14"
-content-hash = "17322f10d9ef2ac67aa4b0459829ebe9ef999c48171e0041b086f96cdaa6dc15"
+content-hash = "fa14d9fffff74680f652bee0900c39705dbd7d3af74441e6e2a620c560b8b0a2"

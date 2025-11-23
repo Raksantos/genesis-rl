@@ -30,20 +30,15 @@ class PolicyCfg:
 
 @dataclass
 class RunnerInnerCfg:
-    algorithm_class_name: str = "PPO"
     checkpoint: int = -1
     experiment_name: str = ""
     load_run: int = -1
     log_interval: int = 1
     max_iterations: int = 10_000
-    num_steps_per_env: int = 24
-    policy_class_name: str = "ActorCritic"
     record_interval: int = -1
     resume: bool = False
     resume_path: str | None = None
     run_name: str = ""
-    runner_class_name: str = "runner_class_name"
-    save_interval: int = 100
 
 
 @dataclass
@@ -51,12 +46,13 @@ class TrainCfg:
     algorithm: AlgorithmCfg
     policy: PolicyCfg
     runner: RunnerInnerCfg
-    init_member_classes: dict[str, Any] = field(default_factory=dict)
     runner_class_name: str = "OnPolicyRunner"
     num_steps_per_env: int = 24
     save_interval: int = 100
+    empirical_normalization: Any = None
+    seed: int = 1
+    init_member_classes: dict[str, Any] = field(default_factory=dict)
     obs_groups: dict | None = None
-    seed: int = 42
 
 
 def get_train_cfg(exp_name: str, max_iterations: int) -> dict[str, Any]:

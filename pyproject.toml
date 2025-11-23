@@ -19,6 +19,7 @@ dependencies = [
     "genesis-world (>=0.3.7,<0.4.0)",
     "torch (>=2.9.1,<3.0.0)",
     "rsl-rl-lib (==2.2.4)",
+    "stable-baselines3 (>=2.7.0,<3.0.0)",
 ]
 
 [tool.poetry]
