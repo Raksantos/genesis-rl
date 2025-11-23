@@ -20,7 +20,7 @@ eval_sac:
 	python3 -m src.go2.sac_eval -a sac -e go2-walking-sac --sac_step 57600000
 
 eval_td3:
-	python3 -m src.go2.td3_eval -e go
+	python3 -m src.go2.td3_eval -e go2-sb3-td3
 
 eval_ddpg:
-	python3 -m src.go2.ddpg_eval -a ddpg -e go2-walking-ddpg --ddpg_step 57600000
+	python3 -m src.go2.ddpg_eval -e go2-sb3-ddpg
