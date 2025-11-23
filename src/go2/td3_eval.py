@@ -17,7 +17,9 @@ def main():
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     args = parser.parse_args()
 
-    backend = gs.constants.backend.gpu if args.device == "cuda" else gs.constants.backend.cpu
+    backend = (
+        gs.constants.backend.gpu if args.device == "cuda" else gs.constants.backend.cpu
+    )
     gs.init(backend=backend)
 
     log_dir = os.path.join("logs", args.exp_name)
@@ -50,9 +52,7 @@ def main():
 
         lin_x = (
             lin_x_range[0]
-            + (lin_x_range[1] - lin_x_range[0])
-            * (np.sin(2 * np.pi * t / 600) + 1)
-            / 2
+            + (lin_x_range[1] - lin_x_range[0]) * (np.sin(2 * np.pi * t / 600) + 1) / 2
         )
         env.go2_env.commands = torch.tensor([[lin_x, 0.0, 0.0]], device=env.device)
 

@@ -17,7 +17,7 @@ eval_ppo:
 	python3 -m src.go2.ppo_eval -e go2-walking-ppo --ckpt 1100
 
 eval_sac:
-	python3 -m src.go2.sac_eval -a sac -e go2-walking-sac --sac_step 57600000
+	python3 -m src.go2.sac_eval -e go2-sb3-sac
 
 eval_td3:
 	python3 -m src.go2.td3_eval -e go2-sb3-td3

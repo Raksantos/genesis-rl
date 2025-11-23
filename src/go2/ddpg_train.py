@@ -1,5 +1,3 @@
-# src/go2/go2_sb3_ddpg_train.py
-
 import argparse
 import os
 import pickle
@@ -12,6 +10,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 
 from src.go2.go2_sb3_env import Go2GymEnv
 from src.configs import get_cfgs
+from src.helpers import EarlyStopCallback
 
 
 def main():
@@ -90,9 +89,11 @@ def main():
         save_vecnormalize=False,
     )
 
+    early_stop_callback = EarlyStopCallback(patience=20, min_delta=1.0, verbose=1)
+
     model.learn(
         total_timesteps=args.total_timesteps,
-        callback=checkpoint_callback,
+        callback=[checkpoint_callback, early_stop_callback],
         progress_bar=True,
     )
 

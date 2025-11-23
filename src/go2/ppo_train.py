@@ -9,14 +9,13 @@ import genesis as gs
 
 from src.go2 import Go2Env
 from src.configs import get_cfgs, get_train_cfg
-from src.algorithms import OffPolicyRunner, OffPolicyRunnerConfig, SACAgent, SACConfig
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="go2-walking")
     parser.add_argument("-B", "--num_envs", type=int, default=2048)
-    parser.add_argument("--max_iterations", type=int, default=2000)
+    parser.add_argument("--max_iterations", type=int, default=4000)
     parser.add_argument("-a", "--algorithm", type=str, default="ppo")
     args = parser.parse_args()
 
@@ -43,42 +42,11 @@ def main():
         command_cfg=command_cfg,
     )
 
-    match args.algorithm.lower():
-        case "ppo":
-            runner = OnPolicyRunner(env, train_cfg, log_dir, device=gs.device)
+    runner = OnPolicyRunner(env, train_cfg, log_dir, device=gs.device)
 
-            runner.learn(
-                num_learning_iterations=args.max_iterations, init_at_random_ep_len=True
-            )
-        case "sac":
-            agent = SACAgent(
-                SACConfig(
-                    obs_dim=env.num_obs,
-                    act_dim=env.num_actions,
-                    device=gs.device,
-                    action_scale=env_cfg["action_scale"],
-                )
-            )
-
-            runner_cfg = OffPolicyRunnerConfig(
-                total_env_steps=args.max_iterations
-                * args.num_envs
-                * train_cfg["num_steps_per_env"],
-                init_random_steps=10_000,
-                batch_size=256,
-            )
-
-            runner = OffPolicyRunner(
-                env=env,
-                agent=agent,
-                runner_cfg=runner_cfg,
-                buffer_size=1_000_000,
-                log_dir=log_dir,
-            )
-
-            runner.run()
-        case _:
-            raise ValueError(f"Algorithm {args.algorithm} not recognized.")
+    runner.learn(
+        num_learning_iterations=args.max_iterations, init_at_random_ep_len=True
+    )
 
 
 if __name__ == "__main__":

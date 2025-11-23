@@ -9,8 +9,6 @@ import genesis as gs
 from src.go2 import Go2Env
 from rsl_rl.runners import OnPolicyRunner
 
-from src.algorithms import SACAgent, SACConfig, OffPolicyRunner
-
 
 def build_env(env_cfg, obs_cfg, reward_cfg, command_cfg, device, show_viewer=True):
     reward_cfg["reward_scales"] = {}
@@ -42,28 +40,6 @@ def load_ppo_policy(env, train_cfg, log_dir, ckpt_iter: int, device: str):
     return act_fn
 
 
-def load_sac_policy(env, log_dir: str, ckpt_step: int, device: str):
-    obs_dim = env.num_obs
-    act_dim = env.num_actions
-
-    sac_cfg = SACConfig(
-        obs_dim=obs_dim,
-        act_dim=act_dim,
-        device=device,
-        action_scale=env.env_cfg["action_scale"],
-    )
-    agent = SACAgent(sac_cfg)
-
-    ckpt_path = os.path.join(log_dir, f"checkpoint_{ckpt_step}.pt")
-    OffPolicyRunner.load_checkpoint(agent, ckpt_path, device=device)
-
-    @torch.no_grad()
-    def act_fn(obs: torch.Tensor) -> torch.Tensor:
-        return agent.act(obs.to(device), eval_mode=True)
-
-    return act_fn
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="go2-walking-ppo")
@@ -87,10 +63,7 @@ def main():
         env_cfg, obs_cfg, reward_cfg, command_cfg, args.device, show_viewer=True
     )
 
-    if args.algo == "ppo":
-        act_fn = load_ppo_policy(env, train_cfg, log_dir, args.ckpt, args.device)
-    else:
-        act_fn = load_sac_policy(env, log_dir, args.sac_step, args.device)
+    act_fn = load_ppo_policy(env, train_cfg, log_dir, args.ckpt, args.device)
 
     obs, _ = env.reset()
 

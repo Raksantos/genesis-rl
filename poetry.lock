@@ -485,6 +485,20 @@ graph = ["objgraph (>=1.7.2)"]
 profile = ["gprof2dot (>=2022.7.29)"]
 
 [[package]]
+name = "dotenv"
+version = "0.9.9"
+description = "Deprecated package"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "dotenv-0.9.9-py2.py3-none-any.whl", hash = "sha256:29cf74a087b31dafdb5a446b6d7e11cbce8ed2741540e2339c69fbef92c94ce9"},
+]
+
+[package.dependencies]
+python-dotenv = "*"
+
+[[package]]
 name = "etils"
 version = "1.13.0"
 description = "Collection of common python utils"
@@ -4278,4 +4292,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13, <3.14"
-content-hash = "fa14d9fffff74680f652bee0900c39705dbd7d3af74441e6e2a620c560b8b0a2"
+content-hash = "a5ac2f1ac4f3c6491950f72b6ae9e78a69042d033736846e17e67a7826fbdcdd"

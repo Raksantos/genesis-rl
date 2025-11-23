@@ -49,6 +49,7 @@ def main():
 
     while True:
         action, _ = model.predict(obs, deterministic=True)
+        print("mean |action|:", float(np.abs(action).mean()))
 
         lin_x = (
             lin_x_range[0]
