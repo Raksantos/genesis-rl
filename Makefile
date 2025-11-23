@@ -1,26 +1,35 @@
+.DEFAULT_GOAL := help
+SHELL := /bin/bash
+
+.PHONY: help format train_ppo train_sac train_td3 train_ddpg eval_ppo eval_sac eval_td3 eval_ddpg
+
+help: ## Mostra este guia de comandos
+	@echo "Comandos disponíveis:" && \
+	awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ {printf "  \033[1;36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
 format:
 	ruff format .
 
-train_ppo:
+train_ppo: ## Treina PPO com implementacao rsl_rl_lib
 	python3 -m src.go2.rsl_lib.ppo_train
 
-train_sac:
+train_sac: ## Treina SAC (stable-baselines3)
 	python3 -m src.go2.sb3.sac_train
 
-train_td3:
+train_td3: ## Treina TD3 (stable-baselines3)
 	python3 -m src.go2.sb3.td3_train
 
-train_ddpg:
+train_ddpg: ## Treina DDPG (stable-baselines3)
 	python3 -m src.go2.sb3.ddpg_train
 
-eval_ppo:
+eval_ppo: ## Avalia PPO salvo
 	python3 -m src.go2.rsl_lib.ppo_eval -e go2-walking-ppo --ckpt 1100
 
-eval_sac:
+eval_sac: ## Avalia SAC salvo
 	python3 -m src.go2.sb3.sac_eval -e go2-sb3-sac
 
-eval_td3:
+eval_td3: ## Avalia TD3 salvo
 	python3 -m src.go2.sb3.td3_eval -e go2-sb3-td3
 
-eval_ddpg:
+eval_ddpg: ## Avalia DDPG salvo
 	python3 -m src.go2.sb3.ddpg_eval -e go2-sb3-ddpg

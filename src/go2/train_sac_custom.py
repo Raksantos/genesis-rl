@@ -1,5 +1,3 @@
-# src/go2/train_sac_custom.py
-
 import argparse
 import os
 import pickle
@@ -40,11 +38,9 @@ def main():
 
     env_cfg, obs_cfg, reward_cfg, command_cfg = get_cfgs()[:4]
 
-    # salva configs para reprodutibilidade
     with open(os.path.join(log_dir, "cfgs_custom.pkl"), "wb") as f:
         pickle.dump([env_cfg, obs_cfg, reward_cfg, command_cfg], f)
 
-    # ------------- ENV DE TREINO (Go2Env vetorizado) -------------
     train_env = Go2Env(
         num_envs=args.train_num_envs,
         env_cfg=env_cfg,
@@ -54,17 +50,15 @@ def main():
         show_viewer=False,
     )
 
-    # ------------- ENV DE AVALIAÇÃO (também Go2Env) -------------
     eval_env = Go2Env(
         num_envs=args.eval_num_envs,
         env_cfg=env_cfg,
         obs_cfg=obs_cfg,
         reward_cfg=reward_cfg,
         command_cfg=command_cfg,
-        show_viewer=False,  # pode ligar True depois para ver o robô
+        show_viewer=False,
     )
 
-    # ------------- SAC CONFIG / AGENT -------------
     sac_cfg = SACConfig(
         obs_dim=train_env.num_obs,
         act_dim=train_env.num_actions,
@@ -79,7 +73,6 @@ def main():
     )
     agent = SACAgent(sac_cfg)
 
-    # ------------- RUNNER CONFIG -------------
     runner_cfg = OffPolicyRunnerConfig(
         total_env_steps=args.total_timesteps,
         init_random_steps=args.init_random_steps,

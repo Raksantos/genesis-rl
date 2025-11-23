@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
+
 @dataclass
 class EarlyStoppingConfig:
     eval_interval_steps: int = 10_000
@@ -9,6 +10,7 @@ class EarlyStoppingConfig:
     max_no_improvement_evals: int = 10
     min_evals: int = 10
     deterministic_eval: bool = True
+
 
 @torch.no_grad()
 def evaluate_agent(env, agent, n_episodes: int, device: torch.device) -> float:

@@ -62,11 +62,9 @@ class OffPolicyRunner:
         self.episode_rewards = np.zeros(self.num_envs, dtype=np.float32)
         self.completed_returns: list[float] = []
 
-        # NEW: acumuladores globais de recompensa
-        self.total_return_sum: float = 0.0   # soma de todos os retornos de episódios
-        self.total_episodes: int = 0         # número total de episódios concluídos
+        self.total_return_sum: float = 0.0
+        self.total_episodes: int = 0      
 
-        # Avaliação / early stopping
         self.eval_env = eval_env
         self.early_cfg = early_cfg
         self.best_eval_return: float | None = None
@@ -82,12 +80,12 @@ class OffPolicyRunner:
         self.global_step = 0
         logs: dict[str, float] = {}
 
-        # Número de iterações do loop externo = total_env_steps / num_envs
+        
         iters = self.cfg.total_env_steps // self.num_envs
         pbar = trange(iters)
 
         for _ in pbar:
-            # --------- Escolha de ação ---------
+            
             if self.global_step < self.cfg.init_random_steps:
                 actions = (
                     2
@@ -101,7 +99,7 @@ class OffPolicyRunner:
                 with torch.no_grad():
                     actions = self.agent.act(obs, eval_mode=False)
 
-            # --------- Step do ambiente ---------
+            
             with torch.no_grad():
                 next_obs, rewards, dones, _ = self.env.step(actions)
 
@@ -109,10 +107,10 @@ class OffPolicyRunner:
             rewards = rewards.unsqueeze(-1).to(self.device)
             dones = dones.unsqueeze(-1).to(self.device).float()
 
-            # Acumula recompensa por episódio (para retorno por env)
+            
             self.episode_rewards += rewards.squeeze(-1).cpu().numpy()
 
-            # --------- Armazena no replay buffer ---------
+            
             self.replay_buffer.store_batch(
                 obs.cpu().numpy(),
                 actions.cpu().numpy(),
@@ -124,7 +122,7 @@ class OffPolicyRunner:
             self.global_step += self.num_envs
             obs = next_obs
 
-            # --------- Episódios terminados ---------
+            
             done_envs = dones.squeeze(-1) > 0.5
             if done_envs.any():
                 idx = done_envs.nonzero(as_tuple=False).squeeze(-1)
@@ -133,24 +131,24 @@ class OffPolicyRunner:
                     ep_ret = float(self.episode_rewards[i])
                     self.completed_returns.append(ep_ret)
 
-                    # NEW: atualiza estatísticas globais
+                    
                     self.total_return_sum += ep_ret
                     self.total_episodes += 1
 
                     self.episode_rewards[i] = 0.0
 
-                # Reset parcial dos envs que terminaram
+                
                 self.env.reset_idx(idx)
                 obs_reset, _ = self.env.get_observations()
                 obs = obs_reset.to(self.device)
 
-            # --------- Atualizações do SAC ---------
+            
             if (
                 self.replay_buffer.size >= self.cfg.batch_size
                 and self.global_step >= self.cfg.init_random_steps
             ):
                 if self.global_step % self.cfg.update_every == 0:
-                    # Número de gradient steps neste gatilho
+                    
                     num_updates = int(self.cfg.update_every * self.cfg.updates_per_step)
                     num_updates = max(num_updates, 1)
 
@@ -158,7 +156,7 @@ class OffPolicyRunner:
                         batch = self.replay_buffer.sample_batch(self.cfg.batch_size)
                         logs = self.agent.update(batch)
 
-            # --------- Avaliação + Early Stopping ---------
+            
             if (
                 self.eval_env is not None
                 and self.early_cfg is not None
@@ -173,7 +171,7 @@ class OffPolicyRunner:
                 )
                 self.num_evals += 1
 
-                # Log simples em arquivo (tipo EvalCallback.log_path)
+                
                 if self.log_dir is not None:
                     eval_log_dir = os.path.join(self.log_dir, "eval_logs")
                     os.makedirs(eval_log_dir, exist_ok=True)
@@ -190,7 +188,7 @@ class OffPolicyRunner:
                     self.best_eval_return = eval_return
                     self.no_improvement_evals = 0
 
-                    # Salva best model (equivalente a best_model_save_path)
+                    
                     if self.log_dir is not None:
                         best_path = os.path.join(self.log_dir, "best_model.pt")
                     else:
@@ -201,7 +199,7 @@ class OffPolicyRunner:
                 else:
                     self.no_improvement_evals += 1
 
-                # Condição de early stopping (equivalente ao StopTrainingOnNoModelImprovement)
+                
                 if (
                     self.num_evals >= self.early_cfg.min_evals
                     and self.no_improvement_evals
@@ -212,16 +210,16 @@ class OffPolicyRunner:
                         f"sem melhoria em {self.no_improvement_evals} avaliações. "
                         f"Melhor retorno avaliado = {self.best_eval_return:.2f}"
                     )
-                    # Checkpoint final
+                    
                     final_path = (
                         os.path.join(self.log_dir, "sac_final.pt")
                         if self.log_dir is not None
                         else "sac_final.pt"
                     )
                     self.save_checkpoint(final_path, self.global_step)
-                    return  # encerra o run
+                    return  
 
-            # --------- Checkpoint periódico (tipo CheckpointCallback) ---------
+            
             if (
                 self.log_dir is not None
                 and self.global_step > 0
@@ -232,7 +230,7 @@ class OffPolicyRunner:
                 )
                 self.save_checkpoint(ckpt_path, self.global_step)
 
-            # --------- Logging no tqdm ---------
+            
             if self.global_step % self.cfg.log_interval == 0 and logs:
                 if self.completed_returns:
                     avg_last_10 = float(np.mean(self.completed_returns[-10:]))
@@ -244,17 +242,17 @@ class OffPolicyRunner:
                 else:
                     avg_all = 0.0
 
-                # aqui você vê: média dos 10 últimos, média global e recompensa acumulada
                 pbar.set_description(
-                    f"step={self.global_step} "
-                    f"R_ep(mean)={avg_all:.2f} "
-                    f"Average_R_total={(self.total_return_sum / self.total_episodes) if self.total_episodes > 0 else 0.0:.2f} "
-                    f"alpha={logs.get('alpha', 0):.3f} "
-                    f"actor_loss={logs.get('actor_loss', 0):.3f} "
-                    f"critic_loss={logs.get('critic_loss', 0):.3f}"
+                    f"🔁 step={self.global_step} | "
+                    f"🎯 avg10={avg_last_10:.2f} | "
+                    f"📉 mean={avg_all:.2f} | "
+                    f"🔥 α={logs.get('alpha', 0):.3f} | "
+                    f"🎭 actor={logs.get('actor_loss', 0):.3f} | "
+                    f"🧠 critic={logs.get('critic_loss', 0):.3f}"
                 )
 
-        # Se terminou por atingir total_env_steps
+
+        
         final_path = (
             os.path.join(self.log_dir, "sac_final.pt")
             if self.log_dir is not None
