@@ -23,7 +23,7 @@ def main():
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
     parser.add_argument("--n_eval_episodes", type=int, default=10)
     parser.add_argument("--eval_num_envs", type=int, default=1)
-    parser.add_argument("--show_viewer", action="store_true")
+    parser.add_argument("--show_viewer", default=True)
     args = parser.parse_args()
 
     set_global_seed()

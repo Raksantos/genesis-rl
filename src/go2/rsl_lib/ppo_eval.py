@@ -8,6 +8,7 @@ import genesis as gs
 
 from src.go2 import Go2Env
 from rsl_rl.runners import OnPolicyRunner
+from src.configs import set_global_seed
 
 
 def build_env(env_cfg, obs_cfg, reward_cfg, command_cfg, device, show_viewer=True):
@@ -51,7 +52,7 @@ def main():
     )
     args = parser.parse_args()
 
-    gs.init(backend=gs.constants.backend.gpu)
+    set_global_seed()
 
     log_dir = f"logs/{args.exp_name}"
 

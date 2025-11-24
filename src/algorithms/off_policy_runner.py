@@ -63,7 +63,7 @@ class OffPolicyRunner:
         self.completed_returns: list[float] = []
 
         self.total_return_sum: float = 0.0
-        self.total_episodes: int = 0      
+        self.total_episodes: int = 0
 
         self.eval_env = eval_env
         self.early_cfg = early_cfg
@@ -80,12 +80,10 @@ class OffPolicyRunner:
         self.global_step = 0
         logs: dict[str, float] = {}
 
-        
         iters = self.cfg.total_env_steps // self.num_envs
         pbar = trange(iters)
 
         for _ in pbar:
-            
             if self.global_step < self.cfg.init_random_steps:
                 actions = (
                     2
@@ -99,7 +97,6 @@ class OffPolicyRunner:
                 with torch.no_grad():
                     actions = self.agent.act(obs, eval_mode=False)
 
-            
             with torch.no_grad():
                 next_obs, rewards, dones, _ = self.env.step(actions)
 
@@ -107,10 +104,8 @@ class OffPolicyRunner:
             rewards = rewards.unsqueeze(-1).to(self.device)
             dones = dones.unsqueeze(-1).to(self.device).float()
 
-            
             self.episode_rewards += rewards.squeeze(-1).cpu().numpy()
 
-            
             self.replay_buffer.store_batch(
                 obs.cpu().numpy(),
                 actions.cpu().numpy(),
@@ -122,7 +117,6 @@ class OffPolicyRunner:
             self.global_step += self.num_envs
             obs = next_obs
 
-            
             done_envs = dones.squeeze(-1) > 0.5
             if done_envs.any():
                 idx = done_envs.nonzero(as_tuple=False).squeeze(-1)
@@ -131,24 +125,20 @@ class OffPolicyRunner:
                     ep_ret = float(self.episode_rewards[i])
                     self.completed_returns.append(ep_ret)
 
-                    
                     self.total_return_sum += ep_ret
                     self.total_episodes += 1
 
                     self.episode_rewards[i] = 0.0
 
-                
                 self.env.reset_idx(idx)
                 obs_reset, _ = self.env.get_observations()
                 obs = obs_reset.to(self.device)
 
-            
             if (
                 self.replay_buffer.size >= self.cfg.batch_size
                 and self.global_step >= self.cfg.init_random_steps
             ):
                 if self.global_step % self.cfg.update_every == 0:
-                    
                     num_updates = int(self.cfg.update_every * self.cfg.updates_per_step)
                     num_updates = max(num_updates, 1)
 
@@ -156,7 +146,6 @@ class OffPolicyRunner:
                         batch = self.replay_buffer.sample_batch(self.cfg.batch_size)
                         logs = self.agent.update(batch)
 
-            
             if (
                 self.eval_env is not None
                 and self.early_cfg is not None
@@ -171,13 +160,10 @@ class OffPolicyRunner:
                 )
                 self.num_evals += 1
 
-                
                 if self.log_dir is not None:
                     eval_log_dir = os.path.join(self.log_dir, "eval_logs")
                     os.makedirs(eval_log_dir, exist_ok=True)
-                    with open(
-                        os.path.join(eval_log_dir, "eval_returns.txt"), "a"
-                    ) as f:
+                    with open(os.path.join(eval_log_dir, "eval_returns.txt"), "a") as f:
                         f.write(f"{self.global_step},{eval_return}\n")
 
                 improved = (
@@ -188,7 +174,6 @@ class OffPolicyRunner:
                     self.best_eval_return = eval_return
                     self.no_improvement_evals = 0
 
-                    
                     if self.log_dir is not None:
                         best_path = os.path.join(self.log_dir, "best_model.pt")
                     else:
@@ -199,7 +184,6 @@ class OffPolicyRunner:
                 else:
                     self.no_improvement_evals += 1
 
-                
                 if (
                     self.num_evals >= self.early_cfg.min_evals
                     and self.no_improvement_evals
@@ -210,16 +194,15 @@ class OffPolicyRunner:
                         f"sem melhoria em {self.no_improvement_evals} avaliações. "
                         f"Melhor retorno avaliado = {self.best_eval_return:.2f}"
                     )
-                    
+
                     final_path = (
                         os.path.join(self.log_dir, "sac_final.pt")
                         if self.log_dir is not None
                         else "sac_final.pt"
                     )
                     self.save_checkpoint(final_path, self.global_step)
-                    return  
+                    return
 
-            
             if (
                 self.log_dir is not None
                 and self.global_step > 0
@@ -230,7 +213,6 @@ class OffPolicyRunner:
                 )
                 self.save_checkpoint(ckpt_path, self.global_step)
 
-            
             if self.global_step % self.cfg.log_interval == 0 and logs:
                 if self.completed_returns:
                     avg_last_10 = float(np.mean(self.completed_returns[-10:]))
@@ -251,8 +233,6 @@ class OffPolicyRunner:
                     f"🧠 critic={logs.get('critic_loss', 0):.3f}"
                 )
 
-
-        
         final_path = (
             os.path.join(self.log_dir, "sac_final.pt")
             if self.log_dir is not None

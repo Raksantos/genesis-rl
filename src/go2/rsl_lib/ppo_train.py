@@ -8,18 +8,18 @@ from rsl_rl.runners import OnPolicyRunner
 import genesis as gs
 
 from src.go2 import Go2Env
-from src.configs import get_cfgs, get_train_cfg
+from src.configs import get_cfgs, get_train_cfg, set_global_seed
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--exp_name", type=str, default="go2-walking")
     parser.add_argument("-B", "--num_envs", type=int, default=2048)
-    parser.add_argument("--max_iterations", type=int, default=4000)
+    parser.add_argument("--max_iterations", type=int, default=1000)
     parser.add_argument("-a", "--algorithm", type=str, default="ppo")
     args = parser.parse_args()
 
-    gs.init(backend=gs.constants.backend.gpu, logging_level="Warning")
+    set_global_seed()
 
     log_dir = f"logs/{args.exp_name + '-' + args.algorithm}"
     env_cfg, obs_cfg, reward_cfg, command_cfg = get_cfgs()
