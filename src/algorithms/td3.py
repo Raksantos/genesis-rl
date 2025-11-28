@@ -188,6 +188,7 @@ class TD3:
         }
         return info
 
+
 @dataclass
 class TD3Config:
     obs_dim: int
@@ -203,6 +204,7 @@ class TD3Config:
     exploration_noise: float
     device: str
     action_scale: float = 1.0
+
 
 class TD3Agent:
     def __init__(self, cfg: TD3Config):
