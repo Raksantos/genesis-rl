@@ -315,6 +315,13 @@ class Go2Env:
                 terrain_entity = self.scene.add_entity(morph=terrain_morph)
 
             self.terrain = terrain_entity
+            
+            # Store terrain data for height queries
+            self.terrain_heightmap = heightmap_meters
+            self.terrain_size = terrain_size
+            self.terrain_resolution = terrain_resolution
+            self.terrain_pos = terrain_pos
+            self.terrain_horizontal_scale = horizontal_scale
 
             # Calculate height at center (0, 0) to position robot correctly
             # Since we normalized the heightmap to have center at 0, center_height should be 0
@@ -334,6 +341,11 @@ class Go2Env:
             )
             robot_init_pos = self.env_cfg.get("base_init_pos", [0.0, 0.0, 0.42])
             self.terrain = None
+            self.terrain_heightmap = None
+            self.terrain_size = None
+            self.terrain_resolution = None
+            self.terrain_pos = None
+            self.terrain_horizontal_scale = None
 
         # add robot
         self.base_init_pos = torch.tensor(robot_init_pos, device=gs.device)
@@ -441,6 +453,64 @@ class Go2Env:
         )
         self.extras = dict()  # extra information for logging
         self.extras["observations"] = dict()
+        
+        # Buffer for terrain height at robot positions (for rewards)
+        self.terrain_height_at_robot = torch.zeros(
+            (self.num_envs,), device=gs.device, dtype=gs.tc_float
+        )
+
+    def _get_terrain_height_at_positions(self, positions):
+        if self.terrain_heightmap is None:
+            # Flat terrain - return zeros
+            return torch.zeros((positions.shape[0],), device=positions.device, dtype=gs.tc_float)
+        
+        # Convert positions to terrain-local coordinates
+        # Terrain is positioned at terrain_pos, so we need to offset
+        terrain_x = positions[:, 0] - self.terrain_pos[0]  # x relative to terrain origin
+        terrain_y = positions[:, 1] - self.terrain_pos[1]  # y relative to terrain origin
+        
+        # Convert to heightmap indices
+        width, length = self.terrain_size
+        width_res, length_res = self.terrain_resolution
+        
+        # Clamp to terrain bounds
+        terrain_x = torch.clamp(terrain_x, 0.0, width)
+        terrain_y = torch.clamp(terrain_y, 0.0, length)
+        
+        # Convert to indices (interpolate between grid points)
+        idx_x = (terrain_x / self.terrain_horizontal_scale).clamp(0, width_res - 1)
+        idx_y = (terrain_y / self.terrain_horizontal_scale).clamp(0, length_res - 1)
+        
+        # Bilinear interpolation
+        idx_x_floor = idx_x.floor().long()
+        idx_y_floor = idx_y.floor().long()
+        idx_x_ceil = (idx_x_floor + 1).clamp(0, width_res - 1)
+        idx_y_ceil = (idx_y_floor + 1).clamp(0, length_res - 1)
+        
+        # Get weights for interpolation
+        wx = (idx_x - idx_x_floor.float()).clamp(0.0, 1.0)
+        wy = (idx_y - idx_y_floor.float()).clamp(0.0, 1.0)
+        
+        # Convert heightmap to torch tensor if needed
+        if not isinstance(self.terrain_heightmap, torch.Tensor):
+            heightmap_t = torch.from_numpy(self.terrain_heightmap).to(
+                device=positions.device, dtype=gs.tc_float
+            )
+        else:
+            heightmap_t = self.terrain_heightmap.to(device=positions.device)
+        
+        # Sample heights at corners (note: heightmap is [length_res, width_res])
+        h00 = heightmap_t[idx_y_floor, idx_x_floor]
+        h10 = heightmap_t[idx_y_floor, idx_x_ceil]
+        h01 = heightmap_t[idx_y_ceil, idx_x_floor]
+        h11 = heightmap_t[idx_y_ceil, idx_x_ceil]
+        
+        # Bilinear interpolation
+        h0 = h00 * (1 - wx) + h10 * wx
+        h1 = h01 * (1 - wx) + h11 * wx
+        terrain_heights = h0 * (1 - wy) + h1 * wy
+        
+        return terrain_heights
 
     def _resample_commands(self, envs_idx):
         if len(envs_idx) == 0:
@@ -495,6 +565,9 @@ class Go2Env:
         self.projected_gravity = transform_by_quat(self.global_gravity, inv_base_quat)
         self.dof_pos[:] = self.robot.get_dofs_position(self.motors_dof_idx)
         self.dof_vel[:] = self.robot.get_dofs_velocity(self.motors_dof_idx)
+        
+        # Update terrain height at robot positions (for rewards)
+        self.terrain_height_at_robot[:] = self._get_terrain_height_at_positions(self.base_pos)
 
         # resample commands
         envs_idx = (
@@ -642,4 +715,12 @@ class Go2Env:
 
     def _reward_base_height(self):
         # Penalize base height away from target
-        return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+        # For random terrain, use relative height (height above terrain)
+        # For flat terrain, use absolute height
+        if self.terrain_heightmap is not None:
+            # Relative height: base height - terrain height
+            relative_height = self.base_pos[:, 2] - self.terrain_height_at_robot
+            return torch.square(relative_height - self.reward_cfg["base_height_target"])
+        else:
+            # Flat terrain: use absolute height
+            return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
