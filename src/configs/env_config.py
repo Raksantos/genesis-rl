@@ -47,6 +47,21 @@ class EnvCfg:
     action_scale: float = 0.25
     simulate_action_latency: bool = True
     clip_actions: float = 100.0
+    # Terrain configuration
+    use_random_terrain: bool = False
+    terrain_size: tuple[float, float] = (20.0, 20.0)  # (width, length) in meters
+    terrain_resolution: tuple[int, int] = (
+        100,
+        100,
+    )  # (width_res, length_res) - balanced for performance and quality
+    terrain_height_range: tuple[float, float] = (
+        -0.3,
+        0.3,
+    )  # min and max height variation
+    terrain_num_functions: int = 8  # number of mathematical functions to combine
+    terrain_uv_scale: float = (
+        10.0  # UV scale for texture tiling - higher values = smaller texture, more repetition
+    )
 
 
 @dataclass

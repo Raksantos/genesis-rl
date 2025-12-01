@@ -1,5 +1,6 @@
 import torch
 import math
+import numpy as np
 import genesis as gs
 from genesis.utils.geom import (
     quat_to_xyz,
@@ -11,6 +12,187 @@ from genesis.utils.geom import (
 
 def gs_rand_float(lower, upper, shape, device):
     return (upper - lower) * torch.rand(size=shape, device=device) + lower
+
+
+def generate_random_terrain_heightmap(
+    size: tuple[float, float],
+    resolution: tuple[int, int],
+    height_range: tuple[float, float],
+    num_functions: int = 8,
+    seed: int = None,
+) -> np.ndarray:
+    """
+    Gera um heightmap randômico usando múltiplas funções matemáticas.
+    Cria elevações suaves como colinas, vales e ondulações.
+
+    Args:
+        size: Tamanho do terreno em metros (width, length)
+        resolution: Resolução do heightmap (width_res, length_res)
+        height_range: Range de altura (min, max)
+        num_functions: Número de funções matemáticas para combinar
+        seed: Seed para reprodutibilidade
+
+    Returns:
+        heightmap: Array numpy com as alturas do terreno
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    width, length = size
+    width_res, length_res = resolution
+    min_height, max_height = height_range
+
+    # Cria grade de coordenadas
+    x = np.linspace(-width / 2, width / 2, width_res)
+    y = np.linspace(-length / 2, length / 2, length_res)
+    X, Y = np.meshgrid(x, y)
+
+    # Inicializa o heightmap
+    heightmap = np.zeros((length_res, width_res))
+
+    # Combina múltiplas funções matemáticas para criar elevações variadas
+    for i in range(num_functions):
+        # Prioriza funções que criam elevações suaves
+        # Reduz probabilidade de ruído puro
+        func_weights = [
+            2.0,
+            2.0,
+            2.0,
+            3.0,
+            2.5,
+            2.0,
+            1.5,
+            0.5,
+        ]  # Mais peso para elevações
+        func_types = [
+            "gaussian",  # Colinas suaves
+            "sin",  # Ondulações
+            "cos",  # Ondulações
+            "sin_cos",  # Padrões complexos
+            "ripple",  # Ondas circulares
+            "wave",  # Ondas direcionais
+            "mountain",  # Montanhas (nova)
+            "noise",  # Ruído suave
+        ]
+
+        func_type = np.random.choice(
+            func_types, p=np.array(func_weights) / np.sum(func_weights)
+        )
+
+        # Parâmetros aleatórios ajustados para criar elevações mais naturais
+        freq_x = np.random.uniform(0.05, 1.5)  # Frequências mais baixas para suavidade
+        freq_y = np.random.uniform(0.05, 1.5)
+        phase_x = np.random.uniform(0, 2 * np.pi)
+        phase_y = np.random.uniform(0, 2 * np.pi)
+        amplitude = np.random.uniform(0.4, 1.2)  # Amplitudes variadas
+        offset_x = np.random.uniform(-width / 3, width / 3)
+        offset_y = np.random.uniform(-length / 3, length / 3)
+
+        if func_type == "sin":
+            contribution = (
+                amplitude
+                * np.sin(freq_x * (X - offset_x) + phase_x)
+                * np.sin(freq_y * (Y - offset_y) + phase_y)
+            )
+        elif func_type == "cos":
+            contribution = (
+                amplitude
+                * np.cos(freq_x * (X - offset_x) + phase_x)
+                * np.cos(freq_y * (Y - offset_y) + phase_y)
+            )
+        elif func_type == "sin_cos":
+            contribution = amplitude * (
+                np.sin(freq_x * (X - offset_x) + phase_x)
+                * np.cos(freq_y * (Y - offset_y) + phase_y)
+            )
+        elif func_type == "gaussian":
+            # Colinas suaves
+            sigma_x = width / (3 * freq_x)
+            sigma_y = length / (3 * freq_y)
+            contribution = amplitude * np.exp(
+                -(
+                    (X - offset_x) ** 2 / (2 * sigma_x**2)
+                    + (Y - offset_y) ** 2 / (2 * sigma_y**2)
+                )
+            )
+        elif func_type == "ripple":
+            # Ondas circulares suaves
+            r = np.sqrt((X - offset_x) ** 2 + (Y - offset_y) ** 2)
+            contribution = amplitude * np.sin(freq_x * r + phase_x) / (1 + r * 0.3)
+        elif func_type == "wave":
+            # Ondas direcionais
+            contribution = amplitude * np.sin(
+                freq_x * (X - offset_x) + freq_y * (Y - offset_y) + phase_x
+            )
+        elif func_type == "mountain":
+            # Montanhas usando múltiplas gaussianas
+            r = np.sqrt((X - offset_x) ** 2 + (Y - offset_y) ** 2)
+            sigma = width / (2 * freq_x)
+            contribution = amplitude * np.exp(-(r**2) / (2 * sigma**2))
+            # Adiciona rugosidade
+            contribution += (
+                0.3
+                * amplitude
+                * np.sin(3 * freq_x * r + phase_x)
+                * np.exp(-(r**2) / (4 * sigma**2))
+            )
+        else:  # noise suave
+            # Ruído suavizado usando filtro gaussiano simples
+            noise = np.random.randn(length_res, width_res)
+            # Aplica suavização simples se scipy estiver disponível
+            try:
+                from scipy import ndimage
+
+                noise = ndimage.gaussian_filter(noise, sigma=2.0)
+            except ImportError:
+                # Se scipy não estiver disponível, aplica média simples manual
+                # Aplica média móvel simples
+                kernel_size = 5
+                pad = kernel_size // 2
+                noise_padded = np.pad(noise, pad, mode="edge")
+                noise_smooth = np.zeros_like(noise)
+                for i in range(length_res):
+                    for j in range(width_res):
+                        noise_smooth[i, j] = np.mean(
+                            noise_padded[i : i + kernel_size, j : j + kernel_size]
+                        )
+                noise = noise_smooth
+            contribution = amplitude * noise * 0.15
+
+        # Aplica peso decrescente para funções posteriores (cria detalhes finos)
+        weight = 1.0 / (1.0 + i * 0.2)
+        heightmap += contribution * weight
+
+    # Aplica suavização final para reduzir pontas
+    try:
+        from scipy import ndimage
+
+        heightmap = ndimage.gaussian_filter(heightmap, sigma=1.0)
+    except ImportError:
+        # Se scipy não estiver disponível, aplica média móvel simples
+        kernel_size = 3
+        pad = kernel_size // 2
+        heightmap_padded = np.pad(heightmap, pad, mode="edge")
+        heightmap_smooth = np.zeros_like(heightmap)
+        for i in range(length_res):
+            for j in range(width_res):
+                heightmap_smooth[i, j] = np.mean(
+                    heightmap_padded[i : i + kernel_size, j : j + kernel_size]
+                )
+        heightmap = heightmap_smooth
+
+    # Normaliza para o range desejado
+    heightmap = heightmap - heightmap.min()
+    heightmap = heightmap / (heightmap.max() + 1e-8)
+    heightmap = heightmap * (max_height - min_height) + min_height
+
+    # Garante que o centro (0, 0) está na altura zero
+    center_idx_x = width_res // 2
+    center_idx_y = length_res // 2
+    center_height = heightmap[center_idx_y, center_idx_x]
+    heightmap = heightmap - center_height
+
+    return heightmap
 
 
 class Go2Env:
@@ -65,13 +247,96 @@ class Go2Env:
             show_viewer=show_viewer,
         )
 
-        # add plain
-        self.scene.add_entity(gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True))
+        # add terrain (random or plane)
+        use_random_terrain = self.env_cfg.get("use_random_terrain", False)
+
+        if use_random_terrain:
+            # Generate random terrain using mathematical functions
+            terrain_size = tuple(self.env_cfg.get("terrain_size", (20.0, 20.0)))
+            terrain_resolution = tuple(
+                self.env_cfg.get("terrain_resolution", (200, 200))
+            )
+            terrain_height_range = tuple(
+                self.env_cfg.get("terrain_height_range", (-0.3, 0.3))
+            )
+            terrain_num_functions = self.env_cfg.get("terrain_num_functions", 5)
+
+            # Generate heightmap (in meters)
+            heightmap_meters = generate_random_terrain_heightmap(
+                size=terrain_size,
+                resolution=terrain_resolution,
+                height_range=terrain_height_range,
+                num_functions=terrain_num_functions,
+                seed=None,  # Random seed each time
+            )
+
+            # Calculate scales for Terrain
+            # horizontal_scale: size of each cell in meters (distance between grid points)
+            # vertical_scale: meters per height unit
+            width, length = terrain_size
+            width_res, length_res = terrain_resolution
+            # If we have n points, we have n-1 intervals covering the width
+            horizontal_scale = width / (width_res - 1) if width_res > 1 else width
+            vertical_scale = 1.0  # heightmap is already in meters
+
+            # Position terrain so that center is at (0, 0, 0)
+            # The terrain's origin is at its corner, so we offset by half the size
+            terrain_pos = (-width / 2, -length / 2, 0.0)
+
+            # Create terrain using Terrain with height_field
+            # When height_field is specified, other terrain configs are ignored
+            # uv_scale controls texture tiling: higher values = smaller texture, more repetition
+            terrain_uv_scale = self.env_cfg.get(
+                "terrain_uv_scale", 10.0
+            )  # Default: 5.0 for more repetition
+            terrain_morph = gs.morphs.Terrain(
+                height_field=heightmap_meters,
+                horizontal_scale=horizontal_scale,
+                vertical_scale=vertical_scale,
+                pos=terrain_pos,  # Position terrain so center is at (0, 0, 0)
+                uv_scale=terrain_uv_scale,  # Higher values = smaller texture, more repetition
+            )
+
+            # Load checker texture and apply via surface parameter
+            # According to Genesis docs: use diffuse_texture parameter with ImageTexture
+            try:
+                checker_texture = gs.textures.ImageTexture(
+                    image_path="textures/checker.png"
+                )
+                surface = gs.surfaces.Rough(diffuse_texture=checker_texture)
+                terrain_entity = self.scene.add_entity(
+                    morph=terrain_morph,
+                    surface=surface,
+                )
+                print("Applied checker texture to terrain via diffuse_texture")
+            except Exception as e:
+                # Fallback: create terrain without texture
+                print(f"Could not apply texture: {e}")
+                terrain_entity = self.scene.add_entity(morph=terrain_morph)
+
+            self.terrain = terrain_entity
+
+            # Calculate height at center (0, 0) to position robot correctly
+            # Since we normalized the heightmap to have center at 0, center_height should be 0
+            center_idx_x = terrain_resolution[0] // 2
+            center_idx_y = terrain_resolution[1] // 2
+            center_height = float(heightmap_meters[center_idx_y, center_idx_x])
+
+            # Get base height from config (default 0.42 for Go2)
+            base_height = self.env_cfg.get("base_init_pos", [0.0, 0.0, 0.42])[2]
+
+            # Robot initial position: center of terrain at terrain height + base height
+            robot_init_pos = [0.0, 0.0, center_height + base_height]
+        else:
+            # Use simple plane
+            self.scene.add_entity(
+                gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True)
+            )
+            robot_init_pos = self.env_cfg.get("base_init_pos", [0.0, 0.0, 0.42])
+            self.terrain = None
 
         # add robot
-        self.base_init_pos = torch.tensor(
-            self.env_cfg["base_init_pos"], device=gs.device
-        )
+        self.base_init_pos = torch.tensor(robot_init_pos, device=gs.device)
         self.base_init_quat = torch.tensor(
             self.env_cfg["base_init_quat"], device=gs.device
         )
