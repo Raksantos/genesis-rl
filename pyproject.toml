@@ -6,7 +6,7 @@ authors = [
     {name = "Rodrigo Santos da Silva",email = "rodrigo.silva@dcc.ufmg.br"},{name = "Bruno Lemos de Lima", email = "brunos.lemos@dcc.ufmg.br"}
 ]
 readme = "README.md"
-requires-python = ">=3.13, <3.14"
+requires-python = ">=3.12, <3.14"
 dependencies = [
     "pandas (>=2.3.3,<3.0.0)",
     "numpy (>=2.3.5,<3.0.0)",
