@@ -51,19 +51,19 @@ def generate_random_terrain_heightmap(
     heightmap = np.zeros((length_res, width_res))
 
     # Combina múltiplas funções matemáticas para criar elevações variadas
+    # Prioriza elevações suaves sobre ruído
     for i in range(num_functions):
-        # Prioriza funções que criam elevações suaves
-        # Reduz probabilidade de ruído puro
+        # Prioriza funções que criam elevações suaves, reduz ruído
         func_weights = [
-            2.0,
-            2.0,
-            2.0,
-            3.0,
-            2.5,
-            2.0,
-            1.5,
-            0.5,
-        ]  # Mais peso para elevações
+            3.0,  # gaussian - colinas suaves
+            2.5,  # sin - ondulações
+            2.5,  # cos - ondulações
+            2.5,  # sin_cos - padrões complexos
+            2.0,  # ripple - ondas circulares
+            2.0,  # wave - ondas direcionais
+            2.5,  # mountain - montanhas
+            0.3,  # noise - muito menos peso para reduzir ruído
+        ]
         func_types = [
             "gaussian",  # Colinas suaves
             "sin",  # Ondulações
@@ -71,22 +71,34 @@ def generate_random_terrain_heightmap(
             "sin_cos",  # Padrões complexos
             "ripple",  # Ondas circulares
             "wave",  # Ondas direcionais
-            "mountain",  # Montanhas (nova)
-            "noise",  # Ruído suave
+            "mountain",  # Montanhas
+            "noise",  # Ruído aleatório
         ]
 
         func_type = np.random.choice(
             func_types, p=np.array(func_weights) / np.sum(func_weights)
         )
 
-        # Parâmetros aleatórios ajustados para criar elevações mais naturais
-        freq_x = np.random.uniform(0.05, 1.5)  # Frequências mais baixas para suavidade
-        freq_y = np.random.uniform(0.05, 1.5)
+        # Parâmetros muito mais aleatórios para criar terreno mais variado
+        freq_x = np.random.uniform(0.01, 3.0)  # Maior range de frequências
+        freq_y = np.random.uniform(0.01, 3.0)
         phase_x = np.random.uniform(0, 2 * np.pi)
         phase_y = np.random.uniform(0, 2 * np.pi)
-        amplitude = np.random.uniform(0.4, 1.2)  # Amplitudes variadas
-        offset_x = np.random.uniform(-width / 3, width / 3)
-        offset_y = np.random.uniform(-length / 3, length / 3)
+        amplitude = np.random.uniform(0.2, 2.0)  # Maior range de amplitudes
+
+        # Coloca os centros das funções FORA do mapa para evitar buracos
+        # Os offsets ficam em uma faixa fora dos limites do mapa
+        margin = width * 0.2  # Margem de 20% do tamanho do mapa
+        # Gera offset fora do mapa: antes de -width/2 ou depois de +width/2
+        if np.random.rand() < 0.5:
+            offset_x = np.random.uniform(-width * 1.5, -width / 2 - margin)
+        else:
+            offset_x = np.random.uniform(width / 2 + margin, width * 1.5)
+
+        if np.random.rand() < 0.5:
+            offset_y = np.random.uniform(-length * 1.5, -length / 2 - margin)
+        else:
+            offset_y = np.random.uniform(length / 2 + margin, length * 1.5)
 
         if func_type == "sin":
             contribution = (
@@ -136,18 +148,18 @@ def generate_random_terrain_heightmap(
                 * np.sin(3 * freq_x * r + phase_x)
                 * np.exp(-(r**2) / (4 * sigma**2))
             )
-        else:  # noise suave
-            # Ruído suavizado usando filtro gaussiano simples
+        else:  # noise - suavizado e reduzido
+            # Ruído muito suavizado para criar apenas textura sutil
             noise = np.random.randn(length_res, width_res)
-            # Aplica suavização simples se scipy estiver disponível
+            # Suavização forte para reduzir ruído
+            sigma = np.random.uniform(2.0, 4.0)  # Mais suavização
             try:
                 from scipy import ndimage
 
-                noise = ndimage.gaussian_filter(noise, sigma=2.0)
+                noise = ndimage.gaussian_filter(noise, sigma=sigma)
             except ImportError:
                 # Se scipy não estiver disponível, aplica média simples manual
-                # Aplica média móvel simples
-                kernel_size = 5
+                kernel_size = max(5, int(sigma * 2))
                 pad = kernel_size // 2
                 noise_padded = np.pad(noise, pad, mode="edge")
                 noise_smooth = np.zeros_like(noise)
@@ -157,20 +169,23 @@ def generate_random_terrain_heightmap(
                             noise_padded[i : i + kernel_size, j : j + kernel_size]
                         )
                 noise = noise_smooth
-            contribution = amplitude * noise * 0.15
+            # Reduz muito a contribuição do ruído - apenas textura sutil
+            contribution = amplitude * noise * np.random.uniform(0.05, 0.15)
 
-        # Aplica peso decrescente para funções posteriores (cria detalhes finos)
-        weight = 1.0 / (1.0 + i * 0.2)
+        # Peso mais variado para criar mais diversidade
+        # Às vezes funções posteriores têm mais peso (cria variação)
+        weight = np.random.uniform(0.5, 1.5) / (1.0 + i * 0.15)
         heightmap += contribution * weight
 
-    # Aplica suavização final para reduzir pontas
+    # Aplica suavização final para reduzir ruído e criar terreno mais suave
+    smoothing_sigma = np.random.uniform(1.0, 2.0)  # Mais suavização para reduzir ruído
     try:
         from scipy import ndimage
 
-        heightmap = ndimage.gaussian_filter(heightmap, sigma=1.0)
+        heightmap = ndimage.gaussian_filter(heightmap, sigma=smoothing_sigma)
     except ImportError:
         # Se scipy não estiver disponível, aplica média móvel simples
-        kernel_size = 3
+        kernel_size = max(3, int(smoothing_sigma * 2))
         pad = kernel_size // 2
         heightmap_padded = np.pad(heightmap, pad, mode="edge")
         heightmap_smooth = np.zeros_like(heightmap)
@@ -185,6 +200,37 @@ def generate_random_terrain_heightmap(
     heightmap = heightmap - heightmap.min()
     heightmap = heightmap / (heightmap.max() + 1e-8)
     heightmap = heightmap * (max_height - min_height) + min_height
+
+    # Cria uma região plana no centro onde o robô começa
+    # Define o raio da região plana (em metros)
+    flat_radius = 5.0  # 5 metros de raio plano no centro
+    center_x = width_res // 2
+    center_y = length_res // 2
+
+    # Cria máscara gaussiana para suavizar a transição da região plana
+    for i in range(length_res):
+        for j in range(width_res):
+            # Distância do centro em coordenadas do mundo
+            world_x = x[j]  # x[j] já está em coordenadas do mundo
+            world_y = y[i]  # y[i] já está em coordenadas do mundo
+            dist_from_center = np.sqrt(world_x**2 + world_y**2)
+
+            # Se estiver dentro do raio plano, achata o terreno
+            if dist_from_center < flat_radius:
+                # Fator de suavização: 1.0 no centro, 0.0 na borda do raio
+                # Usa função suave (cos) para transição
+                if dist_from_center < flat_radius * 0.7:
+                    # Região completamente plana
+                    blend_factor = 0.0
+                else:
+                    # Zona de transição suave
+                    transition = (dist_from_center - flat_radius * 0.7) / (
+                        flat_radius * 0.3
+                    )
+                    blend_factor = (1.0 - np.cos(transition * np.pi)) / 2.0
+
+                # Interpola entre altura atual e zero (plano)
+                heightmap[i, j] = heightmap[i, j] * blend_factor
 
     # Garante que o centro (0, 0) está na altura zero
     center_idx_x = width_res // 2
@@ -247,17 +293,32 @@ class Go2Env:
             show_viewer=show_viewer,
         )
 
-        # add terrain (random or plane)
+        # Shared terrain configuration variables
         use_random_terrain = self.env_cfg.get("use_random_terrain", False)
+        terrain_size = tuple(
+            self.env_cfg.get("terrain_size", (100.0, 100.0))
+        )  # (width, length) in meters
+        terrain_uv_scale = self.env_cfg.get(
+            "terrain_uv_scale", 50.0
+        )  # UV scale for texture tiling - higher values = smaller texture, more repetition
 
+        # Load checker texture (shared between random terrain and plane)
+        checker_texture = None
+        try:
+            checker_texture = gs.textures.ImageTexture(
+                image_path="textures/checker.png"
+            )
+        except Exception as e:
+            print(f"Could not load checker texture: {e}")
+
+        # add terrain (random or plane)
         if use_random_terrain:
             # Generate random terrain using mathematical functions
-            terrain_size = tuple(self.env_cfg.get("terrain_size", (20.0, 20.0)))
             terrain_resolution = tuple(
-                self.env_cfg.get("terrain_resolution", (200, 200))
+                self.env_cfg.get("terrain_resolution", (100, 100))
             )
             terrain_height_range = tuple(
-                self.env_cfg.get("terrain_height_range", (-0.3, 0.3))
+                self.env_cfg.get("terrain_height_range", (-1.0, 1.0))
             )
             terrain_num_functions = self.env_cfg.get("terrain_num_functions", 5)
 
@@ -284,11 +345,6 @@ class Go2Env:
             terrain_pos = (-width / 2, -length / 2, 0.0)
 
             # Create terrain using Terrain with height_field
-            # When height_field is specified, other terrain configs are ignored
-            # uv_scale controls texture tiling: higher values = smaller texture, more repetition
-            terrain_uv_scale = self.env_cfg.get(
-                "terrain_uv_scale", 10.0
-            )  # Default: 5.0 for more repetition
             terrain_morph = gs.morphs.Terrain(
                 height_field=heightmap_meters,
                 horizontal_scale=horizontal_scale,
@@ -297,25 +353,19 @@ class Go2Env:
                 uv_scale=terrain_uv_scale,  # Higher values = smaller texture, more repetition
             )
 
-            # Load checker texture and apply via surface parameter
-            # According to Genesis docs: use diffuse_texture parameter with ImageTexture
-            try:
-                checker_texture = gs.textures.ImageTexture(
-                    image_path="textures/checker.png"
-                )
+            # Apply checker texture via surface parameter
+            if checker_texture is not None:
                 surface = gs.surfaces.Rough(diffuse_texture=checker_texture)
                 terrain_entity = self.scene.add_entity(
                     morph=terrain_morph,
                     surface=surface,
                 )
-                print("Applied checker texture to terrain via diffuse_texture")
-            except Exception as e:
-                # Fallback: create terrain without texture
-                print(f"Could not apply texture: {e}")
+                print("Applied checker texture to random terrain via diffuse_texture")
+            else:
                 terrain_entity = self.scene.add_entity(morph=terrain_morph)
 
             self.terrain = terrain_entity
-            
+
             # Store terrain data for height queries
             self.terrain_heightmap = heightmap_meters
             self.terrain_size = terrain_size
@@ -335,17 +385,45 @@ class Go2Env:
             # Robot initial position: center of terrain at terrain height + base height
             robot_init_pos = [0.0, 0.0, center_height + base_height]
         else:
-            # Use simple plane
-            self.scene.add_entity(
-                gs.morphs.URDF(file="urdf/plane/plane.urdf", fixed=True)
+            # Use plane primitive with checker texture
+            width, length = terrain_size
+            # Create plane primitive centered at (0, 0, 0)
+            # Plane accepts plane_size parameter: (width, length)
+            # tile_size controls texture repetition - convert uv_scale to tile_size
+            # Higher uv_scale = more repetition = smaller tile_size
+            tile_size_val = max(1, int(terrain_size[0] / terrain_uv_scale))
+            plane_morph = gs.morphs.Plane(
+                pos=(0.0, 0.0, 0.0),  # Center at origin
+                plane_size=(width, length),  # Size of the plane
+                tile_size=(
+                    tile_size_val,
+                    tile_size_val,
+                ),  # Tile size for texture repetition
+                fixed=True,  # Plane should be fixed (defined in morph)
             )
+
+            # Apply checker texture via surface parameter
+            if checker_texture is not None:
+                surface = gs.surfaces.Rough(diffuse_texture=checker_texture)
+                plane_entity = self.scene.add_entity(
+                    morph=plane_morph,
+                    surface=surface,
+                )
+                print("Applied checker texture to plane primitive via diffuse_texture")
+            else:
+                plane_entity = self.scene.add_entity(
+                    morph=plane_morph,
+                )
+
+            self.terrain = plane_entity
             robot_init_pos = self.env_cfg.get("base_init_pos", [0.0, 0.0, 0.42])
-            self.terrain = None
-            self.terrain_heightmap = None
-            self.terrain_size = None
-            self.terrain_resolution = None
-            self.terrain_pos = None
-            self.terrain_horizontal_scale = None
+
+            # Store terrain data (for compatibility with height queries)
+            self.terrain_heightmap = None  # No heightmap for flat plane
+            self.terrain_size = terrain_size  # Store shared size
+            self.terrain_resolution = None  # No resolution for plane
+            self.terrain_pos = (-width / 2, -length / 2, 0.0)  # For consistency
+            self.terrain_horizontal_scale = None  # No scale for plane
 
         # add robot
         self.base_init_pos = torch.tensor(robot_init_pos, device=gs.device)
@@ -368,6 +446,28 @@ class Go2Env:
                 lookat=(0, 0, 0.5),
                 fov=40,
                 GUI=True,
+            )
+
+        # Check if goal navigation is enabled (before build, so we can add marker)
+        use_goal_navigation = self.env_cfg.get("use_goal_navigation", False)
+
+        # Create visual marker for goal (only for first environment if multiple)
+        # Must be created BEFORE scene.build()
+        self.goal_marker = None
+        if use_goal_navigation and num_envs > 0:
+            # Create a sphere marker for the goal (only for visualization)
+            sphere_morph = gs.morphs.Sphere(
+                radius=0.1,  # 10cm radius sphere
+                pos=(
+                    0.0,
+                    0.0,
+                    1.0,
+                ),  # Start at visible height, will be updated after build
+                collision=False,  # No collision, just visual
+            )
+            self.goal_marker = self.scene.add_entity(
+                morph=sphere_morph,
+                surface=gs.surfaces.Emission(color=(1.0, 0.0, 0.0)),  # Bright red color
             )
 
         # build
@@ -453,44 +553,103 @@ class Go2Env:
         )
         self.extras = dict()  # extra information for logging
         self.extras["observations"] = dict()
-        
+
         # Buffer for terrain height at robot positions (for rewards)
         self.terrain_height_at_robot = torch.zeros(
             (self.num_envs,), device=gs.device, dtype=gs.tc_float
         )
 
+        # Goal/waypoint system
+        self.use_goal_navigation = (
+            use_goal_navigation  # Use the value we already checked
+        )
+        if self.use_goal_navigation:
+            # Goal positions (x, y, z) - z will be set based on terrain height
+            self.goal_positions = torch.zeros(
+                (self.num_envs, 3), device=gs.device, dtype=gs.tc_float
+            )
+            # Distance to goal
+            self.goal_distances = torch.zeros(
+                (self.num_envs,), device=gs.device, dtype=gs.tc_float
+            )
+            # Previous distance to goal (for reward calculation)
+            self.prev_goal_distances = torch.zeros(
+                (self.num_envs,), device=gs.device, dtype=gs.tc_float
+            )
+            # Goal reached flag
+            self.goal_reached = torch.zeros(
+                (self.num_envs,), device=gs.device, dtype=torch.bool
+            )
+            # Time since last goal resample
+            self.goal_resample_timer = torch.zeros(
+                (self.num_envs,), device=gs.device, dtype=gs.tc_float
+            )
+            self.goal_reach_distance = self.env_cfg.get("goal_reach_distance", 0.5)
+            self.goal_resample_time_s = self.env_cfg.get("goal_resample_time_s", 10.0)
+            self.goal_resample_interval = math.ceil(self.goal_resample_time_s / self.dt)
+        else:
+            # Initialize goal-related buffers as None/zeros if disabled
+            self.goal_positions = None
+            self.goal_distances = None
+            self.prev_goal_distances = None
+            self.goal_reached = None
+            self.goal_resample_timer = None
+
     def _get_terrain_height_at_positions(self, positions):
         if self.terrain_heightmap is None:
             # Flat terrain - return zeros
-            return torch.zeros((positions.shape[0],), device=positions.device, dtype=gs.tc_float)
-        
+            return torch.zeros(
+                (positions.shape[0],), device=positions.device, dtype=gs.tc_float
+            )
+
         # Convert positions to terrain-local coordinates
         # Terrain is positioned at terrain_pos, so we need to offset
-        terrain_x = positions[:, 0] - self.terrain_pos[0]  # x relative to terrain origin
-        terrain_y = positions[:, 1] - self.terrain_pos[1]  # y relative to terrain origin
-        
+        terrain_x = (
+            positions[:, 0] - self.terrain_pos[0]
+        )  # x relative to terrain origin
+        terrain_y = (
+            positions[:, 1] - self.terrain_pos[1]
+        )  # y relative to terrain origin
+
         # Convert to heightmap indices
         width, length = self.terrain_size
         width_res, length_res = self.terrain_resolution
-        
+
         # Clamp to terrain bounds
         terrain_x = torch.clamp(terrain_x, 0.0, width)
         terrain_y = torch.clamp(terrain_y, 0.0, length)
-        
+
         # Convert to indices (interpolate between grid points)
-        idx_x = (terrain_x / self.terrain_horizontal_scale).clamp(0, width_res - 1)
-        idx_y = (terrain_y / self.terrain_horizontal_scale).clamp(0, length_res - 1)
-        
-        # Bilinear interpolation
+        # horizontal_scale is the distance between grid points
+        # For width_res points covering width, we have (width_res - 1) intervals
+        idx_x = terrain_x / self.terrain_horizontal_scale
+        idx_y = terrain_y / self.terrain_horizontal_scale
+
+        # Clamp indices to valid range [0, width_res - 1] and [0, length_res - 1]
+        idx_x = torch.clamp(idx_x, 0.0, float(width_res - 1))
+        idx_y = torch.clamp(idx_y, 0.0, float(length_res - 1))
+
+        # Bilinear interpolation: get floor and ceil indices
         idx_x_floor = idx_x.floor().long()
         idx_y_floor = idx_y.floor().long()
-        idx_x_ceil = (idx_x_floor + 1).clamp(0, width_res - 1)
-        idx_y_ceil = (idx_y_floor + 1).clamp(0, length_res - 1)
-        
-        # Get weights for interpolation
+        idx_x_ceil = torch.min(
+            idx_x_floor + 1,
+            torch.tensor(width_res - 1, device=idx_x.device, dtype=torch.long),
+        )
+        idx_y_ceil = torch.min(
+            idx_y_floor + 1,
+            torch.tensor(length_res - 1, device=idx_y.device, dtype=torch.long),
+        )
+
+        # Get interpolation weights (fractional part)
         wx = (idx_x - idx_x_floor.float()).clamp(0.0, 1.0)
         wy = (idx_y - idx_y_floor.float()).clamp(0.0, 1.0)
-        
+
+        # Handle edge case: when exactly at the last point, weight should be 0
+        # This ensures we don't interpolate beyond the heightmap bounds
+        wx = torch.where(idx_x_floor >= width_res - 1, torch.zeros_like(wx), wx)
+        wy = torch.where(idx_y_floor >= length_res - 1, torch.zeros_like(wy), wy)
+
         # Convert heightmap to torch tensor if needed
         if not isinstance(self.terrain_heightmap, torch.Tensor):
             heightmap_t = torch.from_numpy(self.terrain_heightmap).to(
@@ -498,19 +657,77 @@ class Go2Env:
             )
         else:
             heightmap_t = self.terrain_heightmap.to(device=positions.device)
-        
+
         # Sample heights at corners (note: heightmap is [length_res, width_res])
         h00 = heightmap_t[idx_y_floor, idx_x_floor]
         h10 = heightmap_t[idx_y_floor, idx_x_ceil]
         h01 = heightmap_t[idx_y_ceil, idx_x_floor]
         h11 = heightmap_t[idx_y_ceil, idx_x_ceil]
-        
+
         # Bilinear interpolation
         h0 = h00 * (1 - wx) + h10 * wx
         h1 = h01 * (1 - wx) + h11 * wx
         terrain_heights = h0 * (1 - wy) + h1 * wy
-        
+
         return terrain_heights
+
+    def _resample_goals(self, envs_idx):
+        """Generate random goal positions within terrain bounds."""
+        if len(envs_idx) == 0 or not self.use_goal_navigation:
+            return
+
+        # Get terrain bounds (or use default if flat terrain)
+        if self.terrain_size is not None:
+            width, length = self.terrain_size
+            # Terrain is centered at (0, 0), so it goes from -width/2 to +width/2
+            # Use a small margin (0.5m) to keep goals away from edges
+            margin = 0.5
+            min_x = -width / 2 + margin
+            max_x = width / 2 - margin
+            min_y = -length / 2 + margin
+            max_y = length / 2 - margin
+        else:
+            # Default bounds for flat terrain
+            min_x = -8.0
+            max_x = 8.0
+            min_y = -8.0
+            max_y = 8.0
+
+        # Generate random goal positions (x, y) within terrain bounds
+        self.goal_positions[envs_idx, 0] = gs_rand_float(
+            min_x, max_x, (len(envs_idx),), gs.device
+        )
+        self.goal_positions[envs_idx, 1] = gs_rand_float(
+            min_y, max_y, (len(envs_idx),), gs.device
+        )
+
+        # Set goal z height based on terrain height at goal position
+        # Goal should be ON the terrain - center of sphere at terrain height + radius
+        # so the bottom of the sphere touches the terrain
+        goal_radius = 0.1  # Radius of the goal marker sphere
+        if self.terrain_heightmap is not None:
+            # Get terrain height at goal (x, y) positions
+            # Create temporary positions tensor with current x, y and z=0 for height query
+            goal_xy_positions = self.goal_positions[envs_idx].clone()
+            goal_xy_positions[:, 2] = 0.0  # Set z to 0 for height query
+            goal_terrain_heights = self._get_terrain_height_at_positions(
+                goal_xy_positions
+            )
+            # Goal height = terrain height + radius (so sphere sits on terrain)
+            # The terrain heightmap is in world coordinates (normalized to center at 0)
+            self.goal_positions[envs_idx, 2] = goal_terrain_heights + goal_radius
+        else:
+            # Flat terrain - goal at ground level + radius
+            self.goal_positions[envs_idx, 2] = goal_radius
+
+        # Reset goal reached flags and distances
+        self.goal_reached[envs_idx] = False
+        self.goal_resample_timer[envs_idx] = 0.0
+
+        # Update goal marker position (only for first environment)
+        if self.goal_marker is not None and 0 in envs_idx:
+            goal_pos = self.goal_positions[0].cpu().numpy()
+            self.goal_marker.set_pos(goal_pos)
 
     def _resample_commands(self, envs_idx):
         if len(envs_idx) == 0:
@@ -565,9 +782,15 @@ class Go2Env:
         self.projected_gravity = transform_by_quat(self.global_gravity, inv_base_quat)
         self.dof_pos[:] = self.robot.get_dofs_position(self.motors_dof_idx)
         self.dof_vel[:] = self.robot.get_dofs_velocity(self.motors_dof_idx)
-        
+
         # Update terrain height at robot positions (for rewards)
-        self.terrain_height_at_robot[:] = self._get_terrain_height_at_positions(self.base_pos)
+        self.terrain_height_at_robot[:] = self._get_terrain_height_at_positions(
+            self.base_pos
+        )
+
+        # Update previous goal distances for reward calculation
+        if self.use_goal_navigation:
+            self.prev_goal_distances[:] = self.goal_distances[:]
 
         # resample commands
         envs_idx = (
@@ -580,6 +803,36 @@ class Go2Env:
             .reshape((-1,))
         )
         self._resample_commands(envs_idx)
+
+        # Update goal distances and check if goals are reached
+        if self.use_goal_navigation:
+            # Calculate distance to goal (only xy distance, ignoring z)
+            goal_xy = self.goal_positions[:, :2]
+            robot_xy = self.base_pos[:, :2]
+            self.goal_distances[:] = torch.norm(goal_xy - robot_xy, dim=1)
+
+            # Check if goals are reached
+            self.goal_reached[:] = self.goal_distances < self.goal_reach_distance
+
+            # Resample goals if reached or timer expired
+            goal_resample_idx = (
+                (
+                    (self.goal_reached)
+                    | (self.goal_resample_timer >= self.goal_resample_interval)
+                )
+                .nonzero(as_tuple=False)
+                .reshape((-1,))
+            )
+            if len(goal_resample_idx) > 0:
+                self._resample_goals(goal_resample_idx)
+
+            # Update goal resample timer
+            self.goal_resample_timer += 1
+
+            # Update goal marker position continuously (only for first environment)
+            if self.goal_marker is not None:
+                goal_pos = self.goal_positions[0].cpu().numpy()
+                self.goal_marker.set_pos(goal_pos)
 
         # check termination and reset
         self.reset_buf = self.episode_length_buf > self.max_episode_length
@@ -683,9 +936,29 @@ class Go2Env:
 
         self._resample_commands(envs_idx)
 
+        # Resample goals when resetting
+        if self.use_goal_navigation:
+            self._resample_goals(envs_idx)
+            self.prev_goal_distances[envs_idx] = self.goal_distances[envs_idx]
+
     def reset(self):
         self.reset_buf[:] = True
         self.reset_idx(torch.arange(self.num_envs, device=gs.device))
+
+        # Initialize goals on first reset
+        if self.use_goal_navigation:
+            self._resample_goals(torch.arange(self.num_envs, device=gs.device))
+            # Calculate initial distances
+            goal_xy = self.goal_positions[:, :2]
+            robot_xy = self.base_pos[:, :2]
+            self.goal_distances[:] = torch.norm(goal_xy - robot_xy, dim=1)
+            self.prev_goal_distances[:] = self.goal_distances[:]
+
+            # Update goal marker position after reset
+            if self.goal_marker is not None:
+                goal_pos = self.goal_positions[0].cpu().numpy()
+                self.goal_marker.set_pos(goal_pos)
+
         return self.obs_buf, None
 
     # ------------ reward functions----------------
@@ -723,4 +996,52 @@ class Go2Env:
             return torch.square(relative_height - self.reward_cfg["base_height_target"])
         else:
             # Flat terrain: use absolute height
-            return torch.square(self.base_pos[:, 2] - self.reward_cfg["base_height_target"])
+            return torch.square(
+                self.base_pos[:, 2] - self.reward_cfg["base_height_target"]
+            )
+
+    def _reward_goal_distance(self):
+        # Reward for reducing distance to goal (negative distance = closer is better)
+        # Use exponential reward that increases as distance decreases
+        if not self.use_goal_navigation:
+            return torch.zeros((self.num_envs,), device=gs.device, dtype=gs.tc_float)
+
+        # Normalize distance (assuming max distance is ~10-15m)
+        max_distance = 15.0
+        normalized_distance = self.goal_distances / max_distance
+
+        # Exponential reward: higher reward for being closer
+        # exp(-distance) gives values between 0 and 1, where 1 is at goal
+        return torch.exp(-normalized_distance * 2.0)
+
+    def _reward_goal_velocity(self):
+        # Reward for moving towards the goal
+        # Positive reward when velocity is in direction of goal
+        if not self.use_goal_navigation:
+            return torch.zeros((self.num_envs,), device=gs.device, dtype=gs.tc_float)
+
+        # Direction vector from robot to goal (xy only)
+        goal_xy = self.goal_positions[:, :2]
+        robot_xy = self.base_pos[:, :2]
+        direction_to_goal = goal_xy - robot_xy
+
+        # Normalize direction vector
+        distance_to_goal = torch.norm(direction_to_goal, dim=1, keepdim=True)
+        # Avoid division by zero
+        direction_to_goal_normalized = direction_to_goal / (distance_to_goal + 1e-6)
+
+        # Project velocity onto direction to goal
+        # Positive dot product = moving towards goal
+        velocity_towards_goal = torch.sum(
+            self.base_lin_vel[:, :2] * direction_to_goal_normalized, dim=1
+        )
+
+        # Reward positive velocity towards goal
+        return torch.clamp(velocity_towards_goal, min=0.0)
+
+    def _reward_goal_reached(self):
+        # Large reward when goal is reached
+        if not self.use_goal_navigation:
+            return torch.zeros((self.num_envs,), device=gs.device, dtype=gs.tc_float)
+
+        return self.goal_reached.float()
