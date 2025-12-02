@@ -726,8 +726,8 @@ class Go2Env:
 
         # Update goal marker position (only for first environment)
         if self.goal_marker is not None and 0 in envs_idx:
-            goal_pos = self.goal_positions[0].cpu().numpy()
-            self.goal_marker.set_pos(goal_pos)
+            goal_pos = self.goal_positions[0:1]  # Shape: [1, 3]
+            self.goal_marker.set_pos(goal_pos, envs_idx=[0])
 
     def _resample_commands(self, envs_idx):
         if len(envs_idx) == 0:
@@ -831,8 +831,8 @@ class Go2Env:
 
             # Update goal marker position continuously (only for first environment)
             if self.goal_marker is not None:
-                goal_pos = self.goal_positions[0].cpu().numpy()
-                self.goal_marker.set_pos(goal_pos)
+                goal_pos = self.goal_positions[0:1]  # Shape: [1, 3]
+                self.goal_marker.set_pos(goal_pos, envs_idx=[0])
 
         # check termination and reset
         self.reset_buf = self.episode_length_buf > self.max_episode_length
@@ -956,8 +956,8 @@ class Go2Env:
 
             # Update goal marker position after reset
             if self.goal_marker is not None:
-                goal_pos = self.goal_positions[0].cpu().numpy()
-                self.goal_marker.set_pos(goal_pos)
+                goal_pos = self.goal_positions[0:1]  # Shape: [1, 3]
+                self.goal_marker.set_pos(goal_pos, envs_idx=[0])
 
         return self.obs_buf, None
 
