@@ -48,7 +48,7 @@ class EnvCfg:
     simulate_action_latency: bool = True
     clip_actions: float = 100.0
     # Terrain configuration
-    use_random_terrain: bool = False  # Use random terrain by default
+    use_random_terrain: bool = True  # Use random terrain by default
     terrain_size: tuple[float, float] = (
         100.0,
         100.0,
