@@ -50,8 +50,8 @@ class EnvCfg:
     # Terrain configuration
     use_random_terrain: bool = True  # Use random terrain by default
     terrain_size: tuple[float, float] = (
-        100.0,
-        100.0,
+        150.0,
+        150.0,
     )  # (width, length) in meters - same size as plane.urdf
     terrain_resolution: tuple[int, int] = (
         100,

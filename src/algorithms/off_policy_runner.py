@@ -6,6 +6,7 @@ import torch
 from tqdm import trange
 
 from src.algorithms.sac import SACAgent
+from src.algorithms.td3 import TD3Agent
 from src.algorithms.replay_buffer import ReplayBuffer
 from src.algorithms.early_stopping import EarlyStoppingConfig, evaluate_agent
 
@@ -25,7 +26,7 @@ class OffPolicyRunner:
     def __init__(
         self,
         env,
-        agent: SACAgent,
+        agent: SACAgent | TD3Agent,
         runner_cfg: OffPolicyRunnerConfig,
         buffer_size: int = 1_000_000,
         log_dir: str | None = None,
@@ -34,7 +35,7 @@ class OffPolicyRunner:
     ):
         """
         env: ambiente de treino (vetorizado: env.num_envs, num_obs, num_actions)
-        agent: instância de SACAgent
+        agent: instância de SACAgent ou TD3Agent
         runner_cfg: hiperparâmetros do loop off-policy
         buffer_size: tamanho do replay buffer
         log_dir: diretório para salvar checkpoints e logs
@@ -195,10 +196,12 @@ class OffPolicyRunner:
                         f"Melhor retorno avaliado = {self.best_eval_return:.2f}"
                     )
 
+                    # Determinar nome do arquivo baseado no tipo de agente
+                    model_name = "td3_final.pt" if isinstance(self.agent, TD3Agent) else "sac_final.pt"
                     final_path = (
-                        os.path.join(self.log_dir, "sac_final.pt")
+                        os.path.join(self.log_dir, model_name)
                         if self.log_dir is not None
-                        else "sac_final.pt"
+                        else model_name
                     )
                     self.save_checkpoint(final_path, self.global_step)
                     return
@@ -233,10 +236,12 @@ class OffPolicyRunner:
                     f"🧠 critic={logs.get('critic_loss', 0):.3f}"
                 )
 
+        # Determinar nome do arquivo baseado no tipo de agente
+        model_name = "td3_final.pt" if isinstance(self.agent, TD3Agent) else "sac_final.pt"
         final_path = (
-            os.path.join(self.log_dir, "sac_final.pt")
+            os.path.join(self.log_dir, model_name)
             if self.log_dir is not None
-            else "sac_final.pt"
+            else model_name
         )
         self.save_checkpoint(final_path, self.global_step)
 
@@ -251,15 +256,18 @@ class OffPolicyRunner:
             "actor_optimizer": self.agent.actor_optimizer.state_dict(),
             "q1_optimizer": self.agent.q1_optimizer.state_dict(),
             "q2_optimizer": self.agent.q2_optimizer.state_dict(),
-            "alpha_opt": self.agent.alpha_opt.state_dict(),
-            "log_alpha": self.agent.log_alpha.detach().cpu(),
         }
+        
+        # Adicionar campos específicos do SAC se existirem
+        if hasattr(self.agent, "alpha_opt") and hasattr(self.agent, "log_alpha"):
+            checkpoint["alpha_opt"] = self.agent.alpha_opt.state_dict()
+            checkpoint["log_alpha"] = self.agent.log_alpha.detach().cpu()
 
         os.makedirs(os.path.dirname(path), exist_ok=True)
         torch.save(checkpoint, path)
 
     @staticmethod
-    def load_checkpoint(agent: SACAgent, path: str, device="cuda"):
+    def load_checkpoint(agent: SACAgent | TD3Agent, path: str, device="cuda"):
         ckpt = torch.load(path, map_location=device)
 
         agent.actor.load_state_dict(ckpt["actor"])
@@ -271,8 +279,11 @@ class OffPolicyRunner:
         agent.actor_optimizer.load_state_dict(ckpt["actor_optimizer"])
         agent.q1_optimizer.load_state_dict(ckpt["q1_optimizer"])
         agent.q2_optimizer.load_state_dict(ckpt["q2_optimizer"])
-        agent.alpha_opt.load_state_dict(ckpt["alpha_opt"])
-
-        agent.log_alpha = ckpt["log_alpha"].to(device).requires_grad_(True)
+        
+        # Carregar campos específicos do SAC se existirem
+        if hasattr(agent, "alpha_opt") and "alpha_opt" in ckpt:
+            agent.alpha_opt.load_state_dict(ckpt["alpha_opt"])
+        if hasattr(agent, "log_alpha") and "log_alpha" in ckpt:
+            agent.log_alpha = ckpt["log_alpha"].to(device).requires_grad_(True)
 
         return ckpt["global_step"]

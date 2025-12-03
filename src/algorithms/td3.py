@@ -43,6 +43,7 @@ class Critic(nn.Module):
 
     def forward(self, obs: torch.Tensor, act: torch.Tensor) -> torch.Tensor:
         x = torch.cat([obs, act], dim=-1)
+        return self.q(x)
 
 
 class TD3:
@@ -208,26 +209,157 @@ class TD3Config:
 
 class TD3Agent:
     def __init__(self, cfg: TD3Config):
-        self.cfg = cfg
-        self.impl = TD3(
-            obs_dim=cfg.obs_dim,
-            act_dim=cfg.act_dim,
-            act_limit=cfg.action_scale,
-            actor_hidden_dims=cfg.hidden_dims,
-            critic_hidden_dims=cfg.hidden_dims,
-            gamma=cfg.gamma,
-            tau=cfg.tau,
-            actor_lr=cfg.actor_lr,
-            critic_lr=cfg.critic_lr,
-            policy_delay=cfg.policy_delay,
-            target_noise=cfg.target_noise,
-            target_noise_clip=cfg.target_noise_clip,
-            device=cfg.device,
-        )
+        self.config = cfg  # Compatibilidade com OffPolicyRunner
+        self.cfg = cfg  # Manter para compatibilidade
+        
+        self.device = torch.device(cfg.device)
+        
+        # Criar redes diretamente no agente para compatibilidade com checkpoints
+        self.actor = Actor(
+            cfg.obs_dim, 
+            cfg.act_dim, 
+            cfg.action_scale, 
+            cfg.hidden_dims
+        ).to(self.device)
+        
+        self.actor_target = copy.deepcopy(self.actor).to(self.device)
+        
+        self.q1 = Critic(cfg.obs_dim, cfg.act_dim, cfg.hidden_dims).to(self.device)
+        self.q2 = Critic(cfg.obs_dim, cfg.act_dim, cfg.hidden_dims).to(self.device)
+        self.q1_target = copy.deepcopy(self.q1).to(self.device)
+        self.q2_target = copy.deepcopy(self.q2).to(self.device)
+        
+        for p in self.actor_target.parameters():
+            p.requires_grad = False
+        for p in self.q1_target.parameters():
+            p.requires_grad = False
+        for p in self.q2_target.parameters():
+            p.requires_grad = False
+        
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=cfg.actor_lr)
+        self.q1_optimizer = torch.optim.Adam(self.q1.parameters(), lr=cfg.critic_lr)
+        self.q2_optimizer = torch.optim.Adam(self.q2.parameters(), lr=cfg.critic_lr)
+        
+        # Parâmetros TD3
+        self.gamma = cfg.gamma
+        self.tau = cfg.tau
+        self.policy_delay = cfg.policy_delay
+        self.target_noise = cfg.target_noise
+        self.target_noise_clip = cfg.target_noise_clip
+        self.exploration_noise = cfg.exploration_noise
+        self.action_scale = cfg.action_scale
+        
+        self.total_it = 0
 
+    @torch.no_grad()
+    def act(self, obs: torch.Tensor, eval_mode: bool = False) -> torch.Tensor:
+        """
+        Compatível com OffPolicyRunner e evaluate_agent.
+        Retorna tensor, não numpy.
+        """
+        obs = obs.to(self.device)
+        action = self.actor(obs)
+        
+        if not eval_mode:
+            # Adicionar ruído de exploração
+            noise = self.exploration_noise * torch.randn_like(action)
+            action = action + noise
+            action = torch.clamp(action, -self.action_scale, self.action_scale)
+        
+        return action
+
+    def update(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
+        """
+        Compatível com OffPolicyRunner.
+        Recebe batch como dict e retorna dict de métricas.
+        """
+        self.total_it += 1
+        
+        obs = batch["obs"].to(self.device)
+        actions = batch["actions"].to(self.device)
+        rewards = batch["rewards"].to(self.device)
+        next_obs = batch["next_obs"].to(self.device)
+        dones = batch["dones"].to(self.device)
+        
+        # Atualizar críticos
+        with torch.no_grad():
+            # Target policy smoothing
+            noise = (torch.randn_like(actions) * self.target_noise).clamp(
+                -self.target_noise_clip, self.target_noise_clip
+            )
+            next_actions = self.actor_target(next_obs) + noise
+            next_actions = next_actions.clamp(-self.action_scale, self.action_scale)
+            
+            q1_next = self.q1_target(next_obs, next_actions)
+            q2_next = self.q2_target(next_obs, next_actions)
+            q_next_min = torch.min(q1_next, q2_next)
+            
+            target_q = rewards + self.gamma * (1.0 - dones) * q_next_min
+        
+        q1_pred = self.q1(obs, actions)
+        q2_pred = self.q2(obs, actions)
+        
+        q1_loss = F.mse_loss(q1_pred, target_q)
+        q2_loss = F.mse_loss(q2_pred, target_q)
+        q_loss = q1_loss + q2_loss
+        
+        self.q1_optimizer.zero_grad()
+        self.q2_optimizer.zero_grad()
+        q_loss.backward()
+        nn.utils.clip_grad_norm_(
+            list(self.q1.parameters()) + list(self.q2.parameters()), max_norm=1.0
+        )
+        self.q1_optimizer.step()
+        self.q2_optimizer.step()
+        
+        # Atualizar actor com policy delay
+        actor_loss = torch.tensor(0.0, device=self.device)
+        if self.total_it % self.policy_delay == 0:
+            pi = self.actor(obs)
+            actor_loss = -self.q1(obs, pi).mean()
+            
+            self.actor_optimizer.zero_grad()
+            actor_loss.backward()
+            nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm=1.0)
+            self.actor_optimizer.step()
+            
+            # Soft update target networks
+            self._soft_update(self.actor, self.actor_target)
+            self._soft_update(self.q1, self.q1_target)
+            self._soft_update(self.q2, self.q2_target)
+        
+        return {
+            "q_loss": q_loss.item(),
+            "q1_loss": q1_loss.item(),
+            "q2_loss": q2_loss.item(),
+            "actor_loss": actor_loss.item(),
+            "q1_mean": q1_pred.mean().item(),
+            "q2_mean": q2_pred.mean().item(),
+        }
+    
+    def _soft_update(self, source, target):
+        """Soft update target networks."""
+        for p, tp in zip(source.parameters(), target.parameters()):
+            tp.data.copy_(self.tau * p.data + (1.0 - self.tau) * tp.data)
+
+    # Métodos de compatibilidade (opcionais, para uso direto)
     def select_action(self, obs, deterministic: bool = False):
-        noise = 0.0 if deterministic else self.cfg.exploration_noise
-        return self.impl.select_action(obs, noise_scale=noise)
+        """Método legado - retorna numpy."""
+        noise = 0.0 if deterministic else self.exploration_noise
+        if isinstance(obs, torch.Tensor):
+            obs = obs.cpu().numpy()
+        action = self.act(torch.as_tensor(obs, device=self.device), eval_mode=deterministic)
+        return action.cpu().numpy()
 
     def train_step(self, replay_buffer, batch_size: int):
-        return self.impl.train_step(replay_buffer, batch_size=batch_size)
+        """Método legado - compatível com uso direto."""
+        batch = replay_buffer.sample_batch(batch_size)
+        # Converter para formato esperado
+        batch_dict = {
+            "obs": batch["obs"],
+            "actions": batch["act"],
+            "rewards": batch["rew"],
+            "next_obs": batch["next_obs"],
+            "dones": batch["done"],
+        }
+        return self.update(batch_dict)
