@@ -5,7 +5,7 @@ SHELL := /bin/bash
 
 help: ## Mostra este guia de comandos
 	@echo "Comandos disponíveis:" && \
-	awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ {printf "  \033[1;36m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_.-]+:.*##/ {printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 format:
 	poetry run ruff format .
@@ -21,9 +21,6 @@ train_sac: ## Treina SAC (stable-baselines3)
 
 train_td3: ## Treina TD3 (stable-baselines3)
 	poetry run python3 -m src.go2.sb3.td3_train
-
-train_ddpg: ## Treina DDPG (stable-baselines3)
-	poetry run python3 -m src.go2.sb3.ddpg_train
 
 train_sac_custom:
 	poetry run python3 -m src.go2.train_sac_custom
@@ -45,9 +42,6 @@ eval_sac: ## Avalia SAC salvo
 
 eval_td3: ## Avalia TD3 salvo
 	poetry run python3 -m src.go2.sb3.td3_eval -e go2-sb3-td3
-
-eval_ddpg: ## Avalia DDPG salvo
-	poetry run python3 -m src.go2.sb3.ddpg_eval -e go2-sb3-ddpg
 
 eval_sac_custom: ## Avalia SAC salvo (implementacao customizada)
 	poetry run python3 -m src.go2.eval_sac_custom
