@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-.PHONY: help format view_env train_ppo train_sac train_td3 train_ddpg eval_ppo eval_sac eval_td3 eval_ddpg
+.PHONY: help format view_env train_ppo train_sac train_td3 train_ddpg train_baseline eval_ppo eval_sac eval_td3 eval_ddpg eval_baseline
 
 help: ## Mostra este guia de comandos
 	@echo "Comandos disponíveis:" && \
@@ -34,6 +34,9 @@ train_td3_custom:
 train_ddpg_custom:
 	poetry run python3 -m src.go2.train_ddpg_custom
 
+train_baseline: ## Treina baseline com política aleatória
+	poetry run python3 -m src.go2.rsl_lib.baseline_train
+
 eval_ppo: ## Avalia PPO salvo
 	poetry run python3 -m src.go2.rsl_lib.ppo_eval -e go2-walking-ppo --ckpt 999
 
@@ -54,3 +57,6 @@ eval_td3_custom: ## Avalia TD3 salvo (implementacao customizada)
 
 eval_ddpg_custom: ## Avalia DDPG salvo (implementacao customizada)
 	poetry run python3 -m src.go2.ddpg_eval_custom
+
+eval_baseline: ## Avalia baseline com política aleatória
+	poetry run python3 -m src.go2.rsl_lib.baseline_eval
