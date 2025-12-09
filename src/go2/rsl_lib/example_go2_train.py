@@ -2,21 +2,9 @@ import argparse
 import os
 import pickle
 import shutil
-from importlib import metadata
 
-from src.configs import set_global_seed, get_cfgs
+from src.configs import get_cfgs
 
-try:
-    try:
-        if metadata.version("rsl-rl"):
-            raise ImportError
-    except metadata.PackageNotFoundError:
-        if metadata.version("rsl-rl-lib") != "2.2.4":
-            raise ImportError
-except (metadata.PackageNotFoundError, ImportError) as e:
-    raise ImportError(
-        "Please uninstall 'rsl_rl' and install 'rsl-rl-lib==2.2.4'."
-    ) from e
 from rsl_rl.runners import OnPolicyRunner
 
 import genesis as gs
