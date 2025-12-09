@@ -196,8 +196,11 @@ class OffPolicyRunner:
                         f"Melhor retorno avaliado = {self.best_eval_return:.2f}"
                     )
 
-                    # Determinar nome do arquivo baseado no tipo de agente
-                    model_name = "td3_final.pt" if isinstance(self.agent, TD3Agent) else "sac_final.pt"
+                    model_name = (
+                        "td3_final.pt"
+                        if isinstance(self.agent, TD3Agent)
+                        else "sac_final.pt"
+                    )
                     final_path = (
                         os.path.join(self.log_dir, model_name)
                         if self.log_dir is not None
@@ -236,8 +239,9 @@ class OffPolicyRunner:
                     f"🧠 critic={logs.get('critic_loss', 0):.3f}"
                 )
 
-        # Determinar nome do arquivo baseado no tipo de agente
-        model_name = "td3_final.pt" if isinstance(self.agent, TD3Agent) else "sac_final.pt"
+        model_name = (
+            "td3_final.pt" if isinstance(self.agent, TD3Agent) else "sac_final.pt"
+        )
         final_path = (
             os.path.join(self.log_dir, model_name)
             if self.log_dir is not None
@@ -257,8 +261,7 @@ class OffPolicyRunner:
             "q1_optimizer": self.agent.q1_optimizer.state_dict(),
             "q2_optimizer": self.agent.q2_optimizer.state_dict(),
         }
-        
-        # Adicionar campos específicos do SAC se existirem
+
         if hasattr(self.agent, "alpha_opt") and hasattr(self.agent, "log_alpha"):
             checkpoint["alpha_opt"] = self.agent.alpha_opt.state_dict()
             checkpoint["log_alpha"] = self.agent.log_alpha.detach().cpu()
@@ -279,8 +282,7 @@ class OffPolicyRunner:
         agent.actor_optimizer.load_state_dict(ckpt["actor_optimizer"])
         agent.q1_optimizer.load_state_dict(ckpt["q1_optimizer"])
         agent.q2_optimizer.load_state_dict(ckpt["q2_optimizer"])
-        
-        # Carregar campos específicos do SAC se existirem
+
         if hasattr(agent, "alpha_opt") and "alpha_opt" in ckpt:
             agent.alpha_opt.load_state_dict(ckpt["alpha_opt"])
         if hasattr(agent, "log_alpha") and "log_alpha" in ckpt:

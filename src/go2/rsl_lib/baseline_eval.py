@@ -3,17 +3,15 @@ import os
 import sys
 import pickle
 from pathlib import Path
-from collections import deque
 
 import numpy as np
 import torch
 import genesis as gs
 
-# Adiciona o diretório raiz do projeto ao path quando executado diretamente
+
 if __name__ == "__main__":
-    # Quando executado como script, adiciona o diretório raiz ao path
     script_path = Path(__file__).resolve()
-    # Vai 4 níveis acima: baseline_eval.py -> rsl_lib -> go2 -> src -> raiz
+
     project_root = script_path.parent.parent.parent.parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
@@ -55,10 +53,8 @@ def evaluate_baseline(
 
     with torch.no_grad():
         while episodes_completed < n_episodes:
-            # Ação aleatória
             actions = baseline.act(obs)
 
-            # Step no ambiente
             obs, rewards, dones, extras = env.step(actions)
             obs = obs.to(device)
             rewards = rewards.to(device)
@@ -67,7 +63,6 @@ def evaluate_baseline(
             current_reward += float(rewards[0].item())
             current_length += 1
 
-            # Detecta fim de episódio
             if dones[0].item() > 0.5:
                 episode_rewards.append(current_reward)
                 episode_lengths.append(current_length)
@@ -79,7 +74,6 @@ def evaluate_baseline(
                     f"Comprimento = {current_length}"
                 )
 
-                # Reset
                 obs, _ = env.reset()
                 obs = obs.to(device)
                 current_reward = 0.0
@@ -112,26 +106,21 @@ def main():
 
     log_dir = f"logs/{args.exp_name}"
 
-    # Carrega configurações
     if os.path.exists(os.path.join(log_dir, "cfgs.pkl")):
         env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(
             open(os.path.join(log_dir, "cfgs.pkl"), "rb")
         )
     else:
-        # Se não encontrar, usa configurações padrão
         from src.configs import get_cfgs, get_train_cfg
 
         env_cfg, obs_cfg, reward_cfg, command_cfg = get_cfgs()
         train_cfg = get_train_cfg(args.exp_name, 1000)
 
-    # Desabilita recompensas para avaliação (opcional)
     reward_cfg["reward_scales"] = {}
 
-    # Ajusta terminações para permitir episódios mais longos
     env_cfg["termination_if_roll_greater_than"] = 50
     env_cfg["termination_if_pitch_greater_than"] = 50
 
-    # Cria ambiente (1 ambiente para avaliação)
     env = Go2Env(
         num_envs=1,
         env_cfg=env_cfg,
@@ -141,9 +130,6 @@ def main():
         show_viewer=True,
     )
 
-    # Cria baseline
-    # O ambiente espera ações no range [-clip_actions, clip_actions]
-    # e depois aplica action_scale internamente
     clip_actions = env_cfg.get("clip_actions", 1.0)
     baseline = RandomBaseline(
         num_actions=env.num_actions,
@@ -151,12 +137,10 @@ def main():
         device=args.device,
     )
 
-    # Avalia
     metrics = evaluate_baseline(
         env, baseline, n_episodes=args.n_episodes, device=args.device
     )
 
-    # Imprime resultados
     print("\n" + "=" * 50)
     print("Resultados da Avaliação do Baseline")
     print("=" * 50)

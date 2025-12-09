@@ -10,11 +10,10 @@ import numpy as np
 import torch
 import genesis as gs
 
-# Adiciona o diretório raiz do projeto ao path quando executado diretamente
+
 if __name__ == "__main__":
-    # Quando executado como script, adiciona o diretório raiz ao path
     script_path = Path(__file__).resolve()
-    # Vai 4 níveis acima: baseline_train.py -> rsl_lib -> go2 -> src -> raiz
+
     project_root = script_path.parent.parent.parent.parent
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
@@ -51,8 +50,7 @@ class RandomBaseline:
             Ações aleatórias no formato (num_envs, num_actions)
         """
         num_envs = obs.shape[0] if obs.dim() > 1 else 1
-        # Gera ações aleatórias no range [-clip_actions, clip_actions]
-        # O ambiente fará clip e aplicará action_scale internamente
+
         actions = (
             2 * torch.rand((num_envs, self.num_actions), device=self.device) - 1
         ) * self.clip_actions
@@ -81,22 +79,17 @@ def run_baseline(
     device = gs.device
     num_envs = env.num_envs
 
-    # Buffers para métricas
     episode_rewards = torch.zeros(num_envs, device=device)
     episode_lengths = torch.zeros(num_envs, device=device, dtype=torch.int)
 
-    # Histórico de métricas para logging
     all_episode_rewards = []
     all_episode_lengths = []
 
-    # Métricas por iteração
     iteration_rewards = []
     iteration_lengths = []
 
-    # Contador de episódios completados antes desta iteração
     episodes_before_iteration = 0
 
-    # Reset ambiente
     obs, _ = env.reset()
     obs = obs.to(device)
 
@@ -110,23 +103,18 @@ def run_baseline(
         iteration_reward_sum = 0.0
         iteration_length_sum = 0
 
-        # Coleta dados por num_steps_per_env steps
         for step in range(num_steps_per_env):
-            # Ação aleatória
             actions = baseline.act(obs)
 
-            # Step no ambiente
             obs, rewards, dones, extras = env.step(actions)
             obs = obs.to(device)
             rewards = rewards.to(device)
             dones = dones.to(device)
 
-            # Atualiza métricas de episódio
             episode_rewards += rewards
             episode_lengths += 1
             total_steps += num_envs
 
-            # Detecta episódios terminados
             done_envs = dones.bool()
             if done_envs.any():
                 done_indices = done_envs.nonzero(as_tuple=False).squeeze(-1)
@@ -141,21 +129,17 @@ def run_baseline(
                     iteration_reward_sum += ep_rew
                     iteration_length_sum += ep_len
 
-                    # Reset métricas do episódio
                     episode_rewards[idx] = 0.0
                     episode_lengths[idx] = 0
 
-            # Reset ambientes que terminaram
             if done_envs.any():
                 env.reset_idx(done_envs.nonzero(as_tuple=False).squeeze(-1))
                 obs_reset, _ = env.get_observations()
                 obs = obs_reset.to(device)
 
-        # Calcula métricas da iteração
         num_completed_episodes = len(all_episode_rewards) - episodes_before_iteration
 
         if num_completed_episodes > 0:
-            # Média dos episódios completados nesta iteração
             recent_rewards = all_episode_rewards[-num_completed_episodes:]
             recent_lengths = all_episode_lengths[-num_completed_episodes:]
 
@@ -165,16 +149,13 @@ def run_baseline(
             iteration_rewards.append(mean_reward)
             iteration_lengths.append(mean_length)
         else:
-            # Se nenhum episódio completou, usa valores dos episódios em andamento
             mean_reward = float(episode_rewards.mean().item())
             mean_length = float(episode_lengths.mean().item())
             iteration_rewards.append(mean_reward)
             iteration_lengths.append(mean_length)
 
-        # Atualiza contador para próxima iteração
         episodes_before_iteration = len(all_episode_rewards)
 
-        # Logging
         if (iteration + 1) % log_interval == 0 or iteration == 0:
             total_episodes = len(all_episode_rewards)
             if total_episodes > 0:
@@ -196,7 +177,6 @@ def run_baseline(
                 f"\n  Total de steps: {total_steps}"
             )
 
-    # Salva métricas finais
     metrics = {
         "episode_rewards": all_episode_rewards,
         "episode_lengths": all_episode_lengths,
@@ -206,12 +186,10 @@ def run_baseline(
         "total_episodes": len(all_episode_rewards),
     }
 
-    # Salva métricas em arquivo
     metrics_path = os.path.join(log_dir, "baseline_metrics.pkl")
     with open(metrics_path, "wb") as f:
         pickle.dump(metrics, f)
 
-    # Salva resumo em texto
     summary_path = os.path.join(log_dir, "baseline_summary.txt")
     with open(summary_path, "w") as f:
         f.write("=== Baseline Random Policy - Resumo ===\n\n")
@@ -269,13 +247,11 @@ def main():
         shutil.rmtree(log_dir)
     os.makedirs(log_dir, exist_ok=True)
 
-    # Salva configurações
     pickle.dump(
         [env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg],
         open(f"{log_dir}/cfgs.pkl", "wb"),
     )
 
-    # Cria ambiente
     env = Go2Env(
         num_envs=args.num_envs,
         env_cfg=env_cfg,
@@ -284,9 +260,6 @@ def main():
         command_cfg=command_cfg,
     )
 
-    # Cria baseline
-    # O ambiente espera ações no range [-clip_actions, clip_actions]
-    # e depois aplica action_scale internamente
     clip_actions = env_cfg.get("clip_actions", 1.0)
     baseline = RandomBaseline(
         num_actions=env.num_actions,
@@ -294,7 +267,6 @@ def main():
         device=gs.device,
     )
 
-    # Executa baseline
     run_baseline(
         env=env,
         baseline=baseline,

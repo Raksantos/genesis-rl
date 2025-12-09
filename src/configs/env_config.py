@@ -47,30 +47,26 @@ class EnvCfg:
     action_scale: float = 0.25
     simulate_action_latency: bool = True
     clip_actions: float = 100.0
-    # Terrain configuration
-    use_random_terrain: bool = True  # Use random terrain by default
+
+    use_random_terrain: bool = True
     terrain_size: tuple[float, float] = (
         150.0,
         150.0,
-    )  # (width, length) in meters - same size as plane.urdf
+    )
     terrain_resolution: tuple[int, int] = (
         100,
         100,
-    )  # (width_res, length_res) - balanced for performance and quality
+    )
     terrain_height_range: tuple[float, float] = (
         -1.0,
         1.0,
-    )  # min and max height variation
-    terrain_num_functions: int = 8  # number of mathematical functions to combine
-    terrain_uv_scale: float = (
-        50.0  # UV scale for texture tiling - higher values = smaller texture, more repetition
     )
-    # Goal/waypoint configuration
-    use_goal_navigation: bool = True  # Enable goal-based navigation rewards
-    goal_reach_distance: float = (
-        0.5  # Distance threshold to consider goal reached (meters)
-    )
-    goal_resample_time_s: float = 10.0  # Time interval to resample goals (seconds)
+    terrain_num_functions: int = 8
+    terrain_uv_scale: float = 50.0
+
+    use_goal_navigation: bool = True
+    goal_reach_distance: float = 0.5
+    goal_resample_time_s: float = 10.0
 
 
 @dataclass
@@ -99,9 +95,9 @@ class RewardCfg:
             "base_height": -50.0,
             "action_rate": -0.005,
             "similar_to_default": -0.1,
-            "goal_distance": 2.0,  # Reward for reducing distance to goal
-            "goal_velocity": 1.0,  # Reward for velocity towards goal
-            "goal_reached": 10.0,  # Reward for reaching goal
+            "goal_distance": 2.0,
+            "goal_velocity": 1.0,
+            "goal_reached": 10.0,
         }
     )
 

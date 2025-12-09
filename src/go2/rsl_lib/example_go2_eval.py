@@ -13,7 +13,9 @@ try:
         if metadata.version("rsl-rl-lib") != "2.2.4":
             raise ImportError
 except (metadata.PackageNotFoundError, ImportError) as e:
-    raise ImportError("Please uninstall 'rsl_rl' and install 'rsl-rl-lib==2.2.4'.") from e
+    raise ImportError(
+        "Please uninstall 'rsl_rl' and install 'rsl-rl-lib==2.2.4'."
+    ) from e
 from rsl_rl.runners import OnPolicyRunner
 
 import genesis as gs
@@ -30,7 +32,9 @@ def main():
     gs.init()
 
     log_dir = f"logs/{args.exp_name}"
-    env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(open(f"logs/{args.exp_name}/cfgs.pkl", "rb"))
+    env_cfg, obs_cfg, reward_cfg, command_cfg, train_cfg = pickle.load(
+        open(f"logs/{args.exp_name}/cfgs.pkl", "rb")
+    )
     reward_cfg["reward_scales"] = {}
 
     env = Go2Env(
